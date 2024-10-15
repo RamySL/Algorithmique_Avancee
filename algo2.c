@@ -217,23 +217,23 @@ bool ContientZero_iter (Liste L){
 /*           SommeAvantKieme0               */
 /*                                          */
 /********************************************/
-/*
-- preconditions : k >= 0
- */
 int SommeAvantKieme0_rec_non_terminal (Liste L, int k){
 
-    if(k == 0 || L == NULL){
+    if(k <= 0 || L == NULL){
         return 0;
     }
 
-    if(L != NULL){
-        if(L->valeur == 0){
-            return (L->valeur) + SommeAvantKieme0_rec_non_terminal (L->suite, k-1);
-        }
-        return (L->valeur) + SommeAvantKieme0_rec_non_terminal (L->suite, k);
+    if(L->valeur == 0){
+        return (L->valeur) + SommeAvantKieme0_rec_non_terminal (L->suite, k-1);
     }
+    return (L->valeur) + SommeAvantKieme0_rec_non_terminal (L->suite, k);
+    
 }
 
+/*
+- On sait que les arguments sont passés par valeurs et donc il n'ya pas besoin 
+de faire des copies, mais on suit juste les conseils du cours
+*/
 int SommeAvantKieme0_iter (Liste L, int k){
     int res = 0;
     int k_copie = k;
@@ -244,27 +244,55 @@ int SommeAvantKieme0_iter (Liste L, int k){
         if(L->valeur == 0){
             k_copie --;
         }
-        res += L->valeur;
+        res += parcours->valeur;
         parcours = parcours->suite;
     }
 
     return res;
 }
 
+int _SommeAvantKieme0_rec_terminal_sous_fonction (Liste L, int k, int res){
 
+    if(k <= 0 || L == NULL){
+        return res;
+    }
 
+    if(L->valeur == 0){
+        return _SommeAvantKieme0_rec_terminal_sous_fonction (L->suite, k-1,res + (L->valeur));
+    }
+    return _SommeAvantKieme0_rec_terminal_sous_fonction (L->suite, k,res + (L->valeur));
+    
+}
 
+int SommeAvantKieme0_rec_terminal_sous_fonction (Liste L, int k){
+    return _SommeAvantKieme0_rec_terminal_sous_fonction(L,k,0);
+}
 
+void _SommeAvantKieme0_rec_terminal_sous_procedure (Liste L, int k, int* res){
 
+    if(k > 0 && L != NULL){
+        (*res) = (*res) + (L->valeur);
+        if(L->valeur == 0){
+            _SommeAvantKieme0_rec_terminal_sous_procedure (L->suite,k-1,res);
+        }else{
+            _SommeAvantKieme0_rec_terminal_sous_procedure (L->suite,k,res);
+        }
+        
+    }
+}
 
+int SommeAvantKieme0_rec_terminal_sous_procedure (Liste L, int k){
+    int res = 0;
+    _SommeAvantKieme0_rec_terminal_sous_procedure(L,k,&res);
+    return res;
 
+}
 
-
-
-
-
-
-
+/*************************************************/
+/*                                               */
+/*           Main                                */
+/*                                               */
+/*************************************************/
 
 /*************************************************/
 /*                                               */
@@ -294,7 +322,7 @@ int main(int argc, char** argv)
         affiche_iter(l);
 
         printf("conitent zero : %d \n", ContientZero_iter(l)); 
-        printf("SommeAvantKieme0_rec_non_terminal : %d \n", SommeAvantKieme0_rec_non_terminal(l,4));
+        printf("SommeAvantKieme0_rec_non_terminal : %d \n", SommeAvantKieme0_rec_terminal_sous_procedure(l,4));
         VideListe(&l);
         return 0;
 }

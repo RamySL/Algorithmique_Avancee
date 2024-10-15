@@ -72,7 +72,6 @@ long fact3(int n) {
   // il est bien sûr interdit d'injecter directement cette approximation
 
 
-
 float Efloat (){
 
     float res = 0.0;
