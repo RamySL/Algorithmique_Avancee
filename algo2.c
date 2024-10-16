@@ -290,6 +290,96 @@ int SommeAvantKieme0_rec_terminal_sous_procedure (Liste L, int k){
 
 /*************************************************/
 /*                                               */
+/*           TueDoublons                         */
+/*                                               */
+/*************************************************/
+
+/*
+- retire les premieres occ de x dans la liste en remontant les appels recursifs
+- [3] -> [3]
+ */
+void _retireDernieresOccX(int x,Liste* L,bool *exist){
+    if(*L != NULL){
+        _retireDernieresOccX(x,&(*L)->suite,exist);
+
+        if((*L)->valeur == x){
+            if(*exist){
+                // ça veut dire on est déja passé par la toutes derniere occurence de x
+                depile(L);
+            }else {
+                // première occurence à partir de la fin de x
+                *exist = true;
+            }
+        }
+
+    }
+
+
+}
+void TueDoublons1 (Liste* L){
+    bool exist = false;
+    
+    if(*L != NULL){
+        _retireDernieresOccX((*L)->valeur, L,&exist);
+        TueDoublons1(&(*L)->suite);
+    }
+}
+/*
+- La procédure retire toutes les occurance de x dans L
+- complexité linéaire : theta(n)
+*/
+void _retireOccXdeListe(int x,Liste* L){
+    if(*L != NULL){
+        if((*L)->valeur == x){
+            depile(L);
+            _retireOccXdeListe(x,L);
+        }else{
+            _retireOccXdeListe(x,&((*L)->suite));
+        }
+    }
+
+}
+/*
+Complexité quadratique : C(n) = C(n-1) + C_(n-1) + 1
+- Avec C : complexité de TueDoublons2_rec et C_ complexité de _retireOccXdeListe, on a mit le cout d'un appel TueDoublons2_rec à 1 
+plus les appels récursifs
+
+- C(n) = C(n-1) + C_(n-1) + 1 = C(n-1) + n-1 + 1 = C(n-1) + n = 1 + 1 + 2 + .... + n = n**2/2 (équivalent)
+
+*/
+void TueDoublons2_rec (Liste* L){
+
+    if(*L != NULL){
+        _retireOccXdeListe((*L)->valeur, &(*L)->suite);
+        TueDoublons2_rec (&(*L)->suite);
+    }
+}
+
+void TueDoublons2_iter (Liste* L){
+
+    Liste* parcours_principale = L;
+    while ((*parcours_principale) != NULL){
+
+        int val_courante = (*parcours_principale) -> valeur;
+        Liste* parcours_aux = &(*parcours_principale) -> suite;
+
+        while((*parcours_aux) != NULL){
+            if((*parcours_aux)->valeur == val_courante){
+                depile(parcours_aux);
+                continue;
+            }
+            parcours_aux = &(*parcours_aux)->suite;
+        }
+
+        parcours_principale = &(*parcours_principale)->suite;
+
+    }
+
+}
+
+
+/*************************************************/
+/*                                               */
 /*           Main                                */
 /*                                               */
 /*************************************************/
@@ -306,19 +396,17 @@ int main(int argc, char** argv)
     Liste l ;
 
         l = NULL ;
-        empile(0,&l);
-        empile(2,&l);
-        empile(8,&l);
-        empile(0,&l);
-        empile(0,&l);
-        empile(9,&l);
-        empile(4,&l);
-        empile(0,&l);
-        empile(1,&l);
-        empile(0,&l);
-        empile(3,&l);
-        empile(2,&l);
+        empile(23, &l);
+        empile(34, &l);
+        empile(12, &l);
+        empile(23, &l);
+        empile(34, &l);
+        empile(34, &l);
+        empile(56, &l);
+        empile(34, &l);
 
+        affiche_iter(l);
+        TueDoublons1(&l);
         affiche_iter(l);
 
         printf("conitent zero : %d \n", ContientZero_iter(l)); 
