@@ -57,7 +57,7 @@ Liste ajoute(int x, Liste l)
     return tmp ;
 }
 
-void empile(int x, Liste *L) 
+void empile(int x, Liste *L)
 { *L = ajoute(x,*L) ; }
 
 /*****************************/
@@ -119,7 +119,7 @@ int longueur_iter (Liste l)
 /*                 VireDernier           */
 /*     avec un depile                    */
 /* � la main opportuniste (version iter) */
-/* ou en utilisant depiie (version rec ) */ 
+/* ou en utilisant depiie (version rec ) */
 /*                                       */
 /*****************************************/
 
@@ -164,7 +164,7 @@ void VideListe(Liste *L)
         depile(L);
         VideListe(L);
     }
-      
+
 }
 
 /********************************************/
@@ -173,9 +173,12 @@ void VideListe(Liste *L)
 /*                                          */
 /********************************************/
 
-bool DeuxEgalX (Liste L, int x)
-   { return true ; }
-   
+bool DeuxEgalX (Liste L, int x){
+    // Renvoie un entier non nul si x est égal au deuxième élément de la liste, ou 0 si cet élément n'existe pas.
+    if(L==NULL || L->suite == NULL) return x==0;
+    return x==L->suite->valeur;
+    //Conversion de type automatique
+}
 
 /********************************************/
 /*                                          */
@@ -192,8 +195,8 @@ bool ContientZero_rec (Liste L){
         return true;
     }else{
         ContientZero_rec (L->suite);
-    }  
-     
+    }
+
 }
 
 bool ContientZero_iter (Liste L){
@@ -209,9 +212,28 @@ bool ContientZero_iter (Liste L){
     }
 
     return false;
-     
+
 }
-   
+/********************************************/
+/*                                          */
+/*          SousEnsemble                    */
+/*                                          */
+/********************************************/
+bool sousEnsemble(Liste l1, Liste l2){
+    while(l1 != NULL && l2 != NULL){
+        // On avance dans l1 uniquement si l'élément en tête de l1 correspond à l'élément courant de l2.
+        if(l1->valeur == l2->valeur) l1 = l1->suite;
+
+        // Dans tous les cas, on avance dans l2.
+        l2 = l2->suite;
+    }
+
+    // Si nous avons pu parcourir l1 jusqu'à la fin, alors nous sommes certains que toutes ses valeurs existent dans l2.
+    // Cela fonctionne même si l1 est vide initialement, car une liste vide est incluse dans toutes les listes, y compris dans la liste vide elle-même.
+
+    //Conversion de type autmatique
+    return l1==NULL;
+}
 /********************************************/
 /*                                          */
 /*           SommeAvantKieme0               */
@@ -227,11 +249,11 @@ int SommeAvantKieme0_rec_non_terminal (Liste L, int k){
         return (L->valeur) + SommeAvantKieme0_rec_non_terminal (L->suite, k-1);
     }
     return (L->valeur) + SommeAvantKieme0_rec_non_terminal (L->suite, k);
-    
+
 }
 
 /*
-- On sait que les arguments sont passés par valeurs et donc il n'ya pas besoin 
+- On sait que les arguments sont passés par valeurs et donc il n'ya pas besoin
 de faire des copies, mais on suit juste les conseils du cours
 */
 int SommeAvantKieme0_iter (Liste L, int k){
@@ -261,7 +283,7 @@ int _SommeAvantKieme0_rec_terminal_sous_fonction (Liste L, int k, int res){
         return _SommeAvantKieme0_rec_terminal_sous_fonction (L->suite, k-1,res + (L->valeur));
     }
     return _SommeAvantKieme0_rec_terminal_sous_fonction (L->suite, k,res + (L->valeur));
-    
+
 }
 
 int SommeAvantKieme0_rec_terminal_sous_fonction (Liste L, int k){
@@ -277,7 +299,7 @@ void _SommeAvantKieme0_rec_terminal_sous_procedure (Liste L, int k, int* res){
         }else{
             _SommeAvantKieme0_rec_terminal_sous_procedure (L->suite,k,res);
         }
-        
+
     }
 }
 
@@ -377,6 +399,38 @@ void TueDoublons2_iter (Liste* L){
 
 }
 
+/*           SommeApresRetroKieme0                                */
+/*                                               */
+/*************************************************/
+
+int sommeApresRetroKieme0(Liste l, int k){
+    /*
+    Explicaiton sous forme d'automate:
+
+    */
+    Liste pile=NULL;
+    int sum=0;
+    while(l != NULL){
+        if(l->valeur==0){
+            if(sum==0)  k--;
+            else {
+                empile(sum, &pile);
+                sum=0;
+            }
+        } else sum+=l->valeur;
+        l=l->suite;
+    }
+    if(sum!=0) {
+        empile(sum, &pile);
+        sum=0;
+    } else k--;
+    while(pile != NULL && k>0){
+        sum+=pile->valeur;
+        depile(&pile);
+        k--;
+    }
+    return sum;
+}
 
 /*************************************************/
 /*                                               */
@@ -393,7 +447,7 @@ void TueDoublons2_iter (Liste* L){
 
 int main(int argc, char** argv)
 {
-    Liste l ;
+    /*Liste l ;
 
         l = NULL ;
         empile(23, &l);
@@ -409,9 +463,10 @@ int main(int argc, char** argv)
         TueDoublons1(&l);
         affiche_iter(l);
 
-        printf("conitent zero : %d \n", ContientZero_iter(l)); 
+        printf("conitent zero : %d \n", ContientZero_iter(l));
         printf("SommeAvantKieme0_rec_non_terminal : %d \n", SommeAvantKieme0_rec_terminal_sous_procedure(l,4));
         VideListe(&l);
+        **/
         return 0;
 }
 
