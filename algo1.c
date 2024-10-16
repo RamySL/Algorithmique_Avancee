@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
-#include <limits.h>  // For INT_MAX and INT_MIN
+#include <math.h>
 /*************************************************/
 /*                                               */
 /*                type booléen                   */
@@ -16,7 +16,7 @@ typedef enum {false, true} bool;
 /*                                               */
 /*************************************************/
 
-long fact (int n)
+long long fact (int n)
 { if (n==0) return 1 ;
   else return n * fact(n-1) ;
 }
@@ -35,7 +35,7 @@ void bisfact(int n, long * r) {
   }
 }
 
-long fact2 (int n){
+long long fact2 (int n){
   long r ;
   bisfact(n,&r) ;
   return r ;
@@ -45,7 +45,7 @@ long fact2 (int n){
 
 // itou en stoquant tout dans un tableau... (très bof en complexité espace)
 
-long fact3(int n) {
+long long fact3(int n) {
 
   long * T = (long *) malloc((n+1)*sizeof(long)) ;
   T[0] = 1 ;
@@ -71,43 +71,12 @@ long fact3(int n) {
   //       9574966967 6277240766 3035354759 4571382178 5251664274
   // il est bien sûr interdit d'injecter directement cette approximation
 
-
-float Efloat2 (){
-
-    float res = 0.0;
-    int i = 0;
-    float fct = 1.0;
-
-    do {
-      res += (1.0/fct);
-      /*printf ("res : %f \n", res);
-      printf("fact : %f \n", fct);*/
-      printf ("res : %f \n", 1.0/fct);
-      i++;
-      fct = fact(i);
-    }while(fct <= 1000000000.0);
-
-    return res ;
-}
+/*
+- Ce qu'on doit controler c'est que le factoriel de n dépasse pas la limite qu'un float peut stockerù
+- et à quel point la fraction (1/fct) peut etre précise (cad avant qu'elle devient nulle)
+*/
 
 /*************************************************/
-
-double Edouble2 ()
-{
-    double res = 0.0;
-    int i = 0;
-    double fct = 1.0;
-
-    do {
-      res += (1.0/fct);
-      /*printf ("res : %f \n", res);
-      printf("fact : %f \n", fct);*/
-      i++;
-      fct = fact(i);
-    }while(fct <= 10000000000.0);
-
-    return res ;
-}
 
 float Efloat(){
   float res=2.0;
@@ -201,6 +170,73 @@ void afficheZdouble(int n){
   }
 }
 
+/*************************************************/
+/*                                               */
+/*            Suite de reeles Xn                 */
+/*                                               */
+/*************************************************/
+/* PAS ENCORE FINIS TOUCHE PAS */
+/*
+précondition (n>=0)
+il vaut mieux rendre -1 quand n<0 ?
+*/
+float X1 (int n){
+
+  float res = 1.0f;
+  int n_copie = n;
+
+  while(n_copie > 0){
+    res = res + (1/res);
+    n_copie --;
+  }
+
+  return res;
+}
+
+float X2 (int n){
+  if(n<=0){
+    return 1;
+  }
+  float xn_1 = X2(n-1);
+  return xn_1 + 1/xn_1;
+
+
+}
+
+float _X3(int n, float acc){
+  if(n<=0){
+    return acc;
+  }
+
+  return _X3(n-1,acc + 1/acc);
+}
+float X3(int n){
+  return _X3(n,1);
+}
+
+float _X4(int n, float* acc){
+
+  if(n > 0){
+    *acc = *acc + 1/(*acc);
+     _X4(n-1,acc);
+  }
+  
+}
+float X4(int n){
+  float res = 1.0f;
+  _X4(n,&res);
+  return res;
+}
+
+/*
+calcule X(10^k) de 1 à k avec la fonction passée en argument
+*/
+void calcule_X_10_k (float (*X)(int n),int k){
+  for (int i = 1; i<=k;i++){
+    printf("X(10^%d) : %f | ",i,X(pow (10,i)));
+  }
+  printf("\n");
+}
 
 /*************************************************/
 /*                                               */
@@ -352,19 +388,50 @@ if(false){
   
 }
 
-if(true){
+if(false){
     for(int i=1; i<31; i++) printf("\nGoodCpn(%d, %d) = %lld", i, 2*i, GoodCpn(i, 2*i));
   
+}
+/* LA suite Xn*/
+if(false){
+  /*Calcule de X100 avec les 4 fonction*/
+  printf ("X100 avec X1 donne : %f \n",X1(100));
+  printf ("X100 avec X2 donne : %f \n",X2(100));
+  printf ("X100 avec X3 donne : %f \n",X3(100));
+  printf ("X100 avec X4 donne : %f \n",X4(100));
+
+  printf ("\n");
+
+  printf("Calcule de X(10^k) avec k de 1 a 9 avec X1 \n\n");
+  calcule_X_10_k(X1,9);
+
+  printf ("\n");
+  
+  printf("Calcule de X(10^k) avec k de 1 a 9 avec X2 \n\n");
+  calcule_X_10_k(X2,9);
+
+  printf ("\n");
+
+  printf("Calcule de X(10^k) avec k de 1 a 9 avec X3 \n\n");
+  calcule_X_10_k(X3,9);
+
+  printf ("\n");
+
+  printf("Calcule de X(10^k) avec k de 1 a 9 avec X4 \n\n");
+  calcule_X_10_k(X4,9);
+
+
 }
 
 
     return 0;
 }
 
-/*void main(){
-  printf ("e : %f %f \n", Edouble2(), Efloat2());
-}*/
-
+/*
+void main(){
+  printf ("e : %f \n",Efloat2());
+}
+*/
 
 
 
