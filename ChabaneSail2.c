@@ -1,7 +1,11 @@
-/************* La correction du TD 2 devrait �tre mise sur ecampus ce samedi    ******/
-
 #include <stdio.h>
 #include <stdlib.h>
+
+/*
+Binome : Chabane Oualid, Sail Ramy
+ramy.sail@etu-upsaclay.fr
+
+*/
 
 /*************************************************/
 /*                                               */

@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <float.h>
 #include <math.h>
+/*
+Binome : Chabane Oualid, Sail Ramy
+ramy.sail@etu-upsaclay.fr
+
+*/
+
 /*************************************************/
 /*                                               */
 /*                type booléen                   */
@@ -25,7 +31,7 @@ long long fact (int n)
 
 // itou avec un argument out => passage par adresse
 
-void bisfact(int n, long * r) {
+void bisfact(int n, long long * r) {
 
   if (n==0)
     *r = 1.0 ;
@@ -36,7 +42,7 @@ void bisfact(int n, long * r) {
 }
 
 long long fact2 (int n){
-  long r ;
+  long long r ;
   bisfact(n,&r) ;
   return r ;
 }
@@ -47,13 +53,13 @@ long long fact2 (int n){
 
 long long fact3(int n) {
 
-  long * T = (long *) malloc((n+1)*sizeof(long)) ;
+  long long * T = (long long *) malloc((n+1)*sizeof(long long)) ;
   T[0] = 1 ;
 
   for (int i=1 ; i <= n ; i++)
           T[i] = i* T[i-1] ;
 
-  long r = T[n] ;
+  long long r = T[n] ;
   free(T) ;
   return r ;
 }
@@ -77,33 +83,37 @@ long long fact3(int n) {
 */
 
 /*************************************************/
-
+/*
+  - Notre condition d'arrêt est quand le ratio 1.0/fct s'annulle càd quand on a pas assez de précision 
+  en float pour capturer un aussi petit nombre
+  - On évite aussi le recalcule du factoriel
+*/
 float Efloat(){
-  float res=2.0;
+  float e=2.0;
   int n=2;
-  int fct=1;
+  long long fct= 1;
   float ratio;
   do{
-      fct*=n++;
+      fct = fct * n++;
       ratio=1.0/fct;
-      res+=ratio;
+      e+=ratio;            
   }
   while(ratio>0);
-  return res;
+  return e;
 }
 
 double Edouble(){
-  double res=2.0;
+  double e=2.0;
   int n=2;
-  int fct=1;
+  long long fct=1;
   double ratio;
   do{
       fct*=n++;
       ratio=1.0/fct;
-      res+=ratio;
+      e+=ratio;
   }
   while(ratio>0);
-  return res;
+  return e;
 }
 
 /*long double Elongdouble(){
@@ -175,7 +185,6 @@ void afficheZdouble(int n){
 /*            Suite de reeles Xn                 */
 /*                                               */
 /*************************************************/
-/* PAS ENCORE FINIS TOUCHE PAS */
 /*
 précondition (n>=0)
 il vaut mieux rendre -1 quand n<0 ?
@@ -214,7 +223,7 @@ float X3(int n){
   return _X3(n,1);
 }
 
-float _X4(int n, float* acc){
+void _X4(int n, float* acc){
 
   if(n > 0){
     *acc = *acc + 1/(*acc);
@@ -227,13 +236,37 @@ float X4(int n){
   _X4(n,&res);
   return res;
 }
+/**
+ * Après le test du calcul des X pour des puissances de 10, on constate que toutes les version recursive font crasher le prgramme 
+ * après 10^4, on déduit que le compilateur n'optimise pas les appels récursifs
+ */
+
+long double X1_bis(long n){
+  long double res = 1.0;
+  long n_copie = n;
+
+  while(n_copie > 0){
+    res = res + (1/res);
+    n_copie --;
+  }
+
+  return res;
+}
+
+/*
+après l'utilisation de X1 avec long double on se rend compte les valeurs calculées par X1 devenaient clairement fauuses à partir de 10^7
+avec 4472.137049 pour X1_bis et 4096 pour X1 comme le montre les tests dans le main
+*/
+
 
 /*
 calcule X(10^k) de 1 à k avec la fonction passée en argument
 */
 void calcule_X_10_k (float (*X)(int n),int k){
+  int pow = 1;
   for (int i = 1; i<=k;i++){
-    printf("X(10^%d) : %f | ",i,X(pow (10,i)));
+    pow *= 10;
+    printf("X(10^%d) : %f | ",i,X(pow));
   }
   printf("\n");
 }
@@ -358,7 +391,7 @@ if (false) {
      printf("%ld \n",fact(20)) ;
      printf("%ld \n",fact2(20)) ;
      printf("%ld \n",fact3(20)) ;
-     printf("Note : fact(20) est le dernier qui passe correctement avec 8 octets \n") ;
+     printf("Note : fact(20) est le dernier qui passe correctement avec 8 octets \n") ; 
      printf("\n") ;
 
 }
@@ -372,7 +405,7 @@ if (false) {
 
 if (false) {
         printf("Valeurs de e en float et en double :\n") ;
-        printf(" e1 = %.20f\ne= 2.7182818284590452353602874713527\n", Efloat() ) ;
+        printf(" e1 = %.20f\n  e= 2.7182818284590452353602874713527\n", Efloat() ) ;
         printf(" e2 = %.30lf \n", Edouble() ) ;
 }
 
@@ -393,23 +426,23 @@ if(false){
   
 }
 /* LA suite Xn*/
-if(false){
+if(true){
   /*Calcule de X100 avec les 4 fonction*/
-  printf ("X100 avec X1 donne : %f \n",X1(100));
-  printf ("X100 avec X2 donne : %f \n",X2(100));
-  printf ("X100 avec X3 donne : %f \n",X3(100));
-  printf ("X100 avec X4 donne : %f \n",X4(100));
+  printf ("X(100) avec X1 donne : %f \n",X1(100));
+  printf ("X(100) avec X2 donne : %f \n",X2(100));
+  printf ("X(100) avec X3 donne : %f \n",X3(100));
+  printf ("X(100) avec X4 donne : %f \n",X4(100));
 
   printf ("\n");
-
+  
   printf("Calcule de X(10^k) avec k de 1 a 9 avec X1 \n\n");
   calcule_X_10_k(X1,9);
 
   printf ("\n");
-  
+  /*
   printf("Calcule de X(10^k) avec k de 1 a 9 avec X2 \n\n");
   calcule_X_10_k(X2,9);
-
+  
   printf ("\n");
 
   printf("Calcule de X(10^k) avec k de 1 a 9 avec X3 \n\n");
@@ -418,20 +451,28 @@ if(false){
   printf ("\n");
 
   printf("Calcule de X(10^k) avec k de 1 a 9 avec X4 \n\n");
-  calcule_X_10_k(X4,9);
+  calcule_X_10_k(X4,9);*/
 
+  /*
+
+  !!! à cause d'un problème de compatibilité sur windows l'affichage des long double ne marche 
+  parceque le compilateur gcc est bien destiné à représenter long double sur 128 bits mais l'environement 
+  de microsoft sous windows utilise 64 bits, ce qui cause les bug d'affichage.
+  - pour ça il faut compiler avec l'option : -D__USE_MINGW_ANSI_STDIO, pour forcer mingw à utiliser sa propre
+  implementation des long double
+  */
+  
+  printf("Calcule de X(10^k) avec k de 1 a 12 avec X1_bis de type long double \n\n");
+  long pow = 1;
+  for (int i = 1; i<=12;i++){
+    pow *= 10;
+    printf("X(10^%d) : %Lf | ",i,X1_bis(pow));
+  }
+  printf("\n");
 
 }
 
-
-    return 0;
 }
-
-/*
-void main(){
-  printf ("e : %f \n",Efloat2());
-}
-*/
 
 
 
