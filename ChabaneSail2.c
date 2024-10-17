@@ -1,19 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "Header.h"
 /*
 Binome : Chabane Oualid, Sail Ramy
 ramy.sail@etu-upsaclay.fr
 
 */
-
-/*************************************************/
-/*                                               */
-/*                type bool�en                   */
-/*                                               */
-/*************************************************/
-
-typedef enum {false, true} bool;
 
 /*************************************************/
 /*                                               */
@@ -344,7 +336,7 @@ void _retireDernieresOccX(int x,Liste* L,bool *exist){
 }
 void TueDoublons1 (Liste* L){
     bool exist = false;
-    
+
     if(*L != NULL){
         _retireDernieresOccX((*L)->valeur, L,&exist);
         TueDoublons1(&(*L)->suite);
@@ -367,7 +359,7 @@ void _retireOccXdeListe(int x,Liste* L){
 }
 /*
 Complexité quadratique : C(n) = C(n-1) + C_(n-1) + 1
-- Avec C : complexité de TueDoublons2_rec et C_ complexité de _retireOccXdeListe, on a mit le cout d'un appel TueDoublons2_rec à 1 
+- Avec C : complexité de TueDoublons2_rec et C_ complexité de _retireOccXdeListe, on a mit le cout d'un appel TueDoublons2_rec à 1
 plus les appels récursifs
 
 - C(n) = C(n-1) + C_(n-1) + 1 = C(n-1) + n-1 + 1 = C(n-1) + n = 1 + 1 + 2 + .... + n = n**2/2 (équivalent)
@@ -436,11 +428,20 @@ int sommeApresRetroKieme0(Liste l, int k){
     return sum;
 }
 
-/*************************************************/
-/*                                               */
-/*           Main                                */
-/*                                               */
-/*************************************************/
+Liste createlist(){
+  int nbr;
+  Liste l=NULL;
+  while(true){
+    printf("\nVoulez vous terminer la saisie? 0 (non) sinon (oui): ");
+    scanf("%d", &nbr);
+    if(nbr) break;
+    printf("\nSaisissez un nombre pour l'empiler: ");
+    scanf("%d", &nbr);
+    l = ajoute(nbr, l);
+
+  }
+  return l;
+}
 
 /*************************************************/
 /*                                               */
@@ -449,9 +450,9 @@ int sommeApresRetroKieme0(Liste l, int k){
 /*************************************************/
 
 
-int main(int argc, char** argv)
+/*int main(int argc, char** argv)
 {
-    /*Liste l ;
+    Liste l ;
 
         l = NULL ;
         empile(23, &l);
@@ -470,9 +471,9 @@ int main(int argc, char** argv)
         printf("conitent zero : %d \n", ContientZero_iter(l));
         printf("SommeAvantKieme0_rec_non_terminal : %d \n", SommeAvantKieme0_rec_terminal_sous_procedure(l,4));
         VideListe(&l);
-        **/
+
         return 0;
-}
+}*/
 
 
 
