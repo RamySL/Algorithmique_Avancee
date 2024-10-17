@@ -282,26 +282,48 @@ long long BadCpn (int p, int n)  // 0 <= p <= n
 
 /*************************************************/
 
+long long _GoodCpn (long long memoize[], int p, int n, int p0){
+    //L aversion récursive avec la mémoization ressemble à la résolution
+    //avec la méthode de pascal en utilisant une table à 2 dimensions (programmation dynamique)
+    //mais avec cette version on effectue plus de tests sur p==0 ou p==n contrairement à la version itérative avec une matrice
+  if(p==0 || p == n) {
+    memoize[n * p0 + p] = 1;
+    return 1;
+  }
+
+  if(memoize[(n - 1) * p0 + p ] == -1) memoize[(n - 1) * p0 + p] = _GoodCpn(memoize, p, n-1, p0);
+  if(memoize[(n-1) * p0 + p - 1] == -1) memoize[(n-1) * p0 + p - 1] = _GoodCpn(memoize, p-1, n-1, p0);
+  return memoize[(n - 1) * p0 + p] + memoize[(n - 1) * p0 + p - 1];
+}
 long long GoodCpn (int p, int n)  // 0 <= p <= n
 {
+  // if(p<0 || n<p) {
+  //   printf("\nEntrees invalides.");
+  //   return -1;
+  // }
+  // long long denum, num=1;
+  // if(p>n-p)
+  //   // On s'assure que p est plus petit que n - p pour optimiser les boucles for en bas, qui s'arrêtent d'abord à p, puis à n - p, et enfin à n.
+  //   // On utilise la propriété C(p, n) = C(n - p, n).
+  //   p=n-p;
+  // for(int i=1; i<=p; i++) num*=i;
+  // //fact==p!
+  // denum=num;
+  // for(int i=p+1; i<=n-p; i++) num *=i;
+
+  // //fact==(n-p)!
+  // denum*=num;
+  // for(int i=n-p+1; i<=n; i++) num *= i;
+  // return num/denum;
   if(p<0 || n<p) {
-    printf("\nEntrees invalides.");
+    printf("\nArguments invalides!");
     return -1;
   }
-  long long denum, num=1;
-  if(p>n-p)
-    // On s'assure que p est plus petit que n - p pour optimiser les boucles for en bas, qui s'arrêtent d'abord à p, puis à n - p, et enfin à n.
-    // On utilise la propriété C(p, n) = C(n - p, n).
-    p=n-p;
-  for(int i=1; i<=p; i++) num*=i;
-  //fact==p!
-  denum=num;
-  for(int i=p+1; i<=n-p; i++) num *=i;
+    long long memoize[(n + 1) * (p + 1)];
+    for (int i = 0; i < (n + 1) * (p + 1); i++) memoize[i] = -1;
 
-  //fact==(n-p)!
-  denum*=num;
-  for(int i=n-p+1; i<=n; i++) num *= i;
-  return num/denum;
+
+  return _GoodCpn(memoize, p, n, p);
 }
 /*************************************************/
 /*                                               */
