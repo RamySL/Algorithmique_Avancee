@@ -6,3 +6,5 @@
 # Ignore log files
 *.log
 
+*.pdf
+

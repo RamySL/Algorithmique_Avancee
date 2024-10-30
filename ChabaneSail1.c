@@ -6,6 +6,7 @@
 /*
 Binome : Chabane Oualid, Sail Ramy
 ramy.sail@etu-upsaclay.fr
+oualid.chabane@etu-upsaclay.fr
 
 */
 
@@ -86,12 +87,15 @@ float Efloat(){
   int n=2;
   long long fct= 1;
   float ratio;
+
   do{
-      fct = fct * n++;
+      fct = fct * n;
+      n++;
       ratio=1.0/fct;
       e+=ratio;
-  }
-  while(ratio>0);
+      
+  }while(ratio>0);
+
   return e;
 }
 
@@ -100,31 +104,16 @@ double Edouble(){
   int n=2;
   long long fct=1;
   double ratio;
+
   do{
-      fct*=n++;
+      fct = fct * n;
+      n++;
       ratio=1.0/fct;
       e+=ratio;
-  }
-  while(ratio>0);
+  }while(ratio>0);
   return e;
 }
 
-/*long double Elongdouble(){
-  long double res = 2.0;
-  int n = 2;
-  unsigned long long int fct = 1;
-  long double ratio;
-
-  do {
-      fct *= n++;
-      ratio = 1.0 / fct;
-      res += ratio;
-  }
-  while (ratio > 0);
-
-  return res;
-}
-*/
 /*************************************************/
 /*                                               */
 /*            Suite Y                            */
@@ -235,6 +224,7 @@ float X4(int n){
  */
 
 long double X1_bis(long n){
+  
   long double res = 1.0;
   long n_copie = n;
 
@@ -331,7 +321,7 @@ long long GoodCpn (int p, int n)  // 0 <= p <= n
 /*                                               */
 /*************************************************/
 
-#ifdef COMMENT_OUT
+//#ifdef COMMENT_OUT
 int main(int argc, char** argv)
 {
 
@@ -417,10 +407,11 @@ int main(int argc, char** argv)
           // e = 2,7182818284 5904523536 0287471352 6624977572 4709369995
           //       9574966967 6277240766 3035354759 4571382178 5251664274
 
-        if (false) {
+        if (true) {
                 printf("Valeurs de e en float et en double :\n") ;
-                printf(" e1 = %.20f\n  e= 2.7182818284590452353602874713527\n", Efloat() ) ;
-                printf(" e2 = %.30lf \n", Edouble() ) ;
+                printf(" e1 = %.20f\n e = 2.718281828459045235360287471352 7\n", Efloat() ) ;
+                printf(" e2 = %.20lf \n", Edouble() ) ;
+                //printf(" e3 = %.20Lf \n", ElongDouble() ) ;
         }
 
         if (false) {
@@ -440,7 +431,7 @@ int main(int argc, char** argv)
 
         }
         /* LA suite Xn*/
-        if(true){
+        if(false){
           /*Calcule de X100 avec les 4 fonction*/
           printf ("X(100) avec X1 donne : %f \n",X1(100));
           printf ("X(100) avec X2 donne : %f \n",X2(100));
@@ -487,7 +478,7 @@ int main(int argc, char** argv)
         }
 
 }
-#endif
+//#endif
 
 
 

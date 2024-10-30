@@ -4,6 +4,7 @@
 /*
 Binome : Chabane Oualid, Sail Ramy
 ramy.sail@etu-upsaclay.fr
+oualid.chabane@etu-upsaclay.fr
 
 */
 
@@ -313,33 +314,40 @@ int SommeAvantKieme0_rec_terminal_sous_procedure (Liste L, int k){
 /*************************************************/
 
 /*
-- retire les premieres occ de x dans la liste en remontant les appels recursifs
-- [3] -> [3]
+- parcours la liste L et à chaque qu'un occurence autre que celle pointée par check_point est trouvée
+dépile check_pointe pour garder à chaque l'occurence la plus récente du parcours et donc la dernière
  */
-void _retireDernieresOccX(int x,Liste* L,bool *exist){
-    if(*L != NULL){
-        _retireDernieresOccX(x,&(*L)->suite,exist);
+void _retirePremieresOccTerm(Liste* check_point,Liste* L,bool *depilement){
+    if((*L)!=NULL){
+        if((*check_point)->valeur == (*L)->valeur){
+            *depilement = true;
 
-        if((*L)->valeur == x){
-            if(*exist){
-                // ça veut dire on est déja passé par la toutes derniere occurence de x
-                depile(L);
-            }else {
-                // première occurence à partir de la fin de x
-                *exist = true;
+            if(&((*check_point)->suite) == L){
+                // Dans le cas ou le checkpointe et la suite du parcours sont consecutifs
+                // quand on va depiler on va perdre le pointeur L, et check_pointe est déjà là ou il est censé être
+                // c'est pour ça ce traitement spécifique
+                depile(check_point);
+                L = check_point;
+            }else{
+                depile(check_point);
+                check_point = L; 
             }
         }
-
+        _retirePremieresOccTerm(check_point,&(*L)->suite,depilement);
+        
     }
-
-
 }
-void TueDoublons1 (Liste* L){
-    bool exist = false;
 
-    if(*L != NULL){
-        _retireDernieresOccX((*L)->valeur, L,&exist);
-        TueDoublons1(&(*L)->suite);
+void TueDoublons1Term (Liste* L){
+    bool depilement = false;
+
+    if((*L) != NULL){
+        _retirePremieresOccTerm(L,&(*L)->suite,&depilement);
+        if(depilement){
+            TueDoublons1Term(L);
+        }else{
+            TueDoublons1Term(&(*L)->suite);
+        }
     }
 }
 /*
@@ -384,9 +392,10 @@ void TueDoublons2_iter (Liste* L){
         while((*parcours_aux) != NULL){
             if((*parcours_aux)->valeur == val_courante){
                 depile(parcours_aux);
-                continue;
+            }else{
+                parcours_aux = &(*parcours_aux)->suite;
             }
-            parcours_aux = &(*parcours_aux)->suite;
+            
         }
 
         parcours_principale = &(*parcours_principale)->suite;
@@ -428,6 +437,7 @@ int sommeApresRetroKieme0(Liste l, int k){
     return sum;
 }
 
+
 Liste createlist(){
   int nbr;
   Liste l=NULL;
@@ -450,7 +460,7 @@ Liste createlist(){
 /*************************************************/
 
 
-/*int main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     Liste l ;
 
@@ -461,11 +471,13 @@ Liste createlist(){
         empile(23, &l);
         empile(34, &l);
         empile(34, &l);
+        empile(34, &l);
         empile(56, &l);
         empile(34, &l);
 
+
         affiche_iter(l);
-        TueDoublons1(&l);
+        TueDoublons1Term(&l);
         affiche_iter(l);
 
         printf("conitent zero : %d \n", ContientZero_iter(l));
@@ -473,7 +485,7 @@ Liste createlist(){
         VideListe(&l);
 
         return 0;
-}*/
+}
 
 
 
