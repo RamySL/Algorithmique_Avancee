@@ -316,8 +316,8 @@ int SommeAvantKieme0_rec_terminal_sous_procedure (Liste L, int k){
 /*************************************************/
 
 /*
-- parcours la liste L et à chaque qu'un occurence autre que celle pointée par check_point est trouvée
-dépile check_pointe pour garder à chaque l'occurence la plus récente du parcours et donc la dernière
+- parcours la liste L et à chaque fois qu'une occurence autre que celle pointée par check_point est trouvée
+dépile check_pointe pour garder à chaque fois l'occurence la plus récente du parcours et donc la dernière occurence
  */
 void _retirePremieresOccTerm(Liste* check_point,Liste* L,bool *depilement){
     if((*L)!=NULL){
@@ -340,15 +340,15 @@ void _retirePremieresOccTerm(Liste* check_point,Liste* L,bool *depilement){
     }
 }
 
-void TueDoublons1Term (Liste* L){
+void TueDoublons1 (Liste* L){
     bool depilement = false;
 
     if((*L) != NULL){
         _retirePremieresOccTerm(L,&(*L)->suite,&depilement);
         if(depilement){
-            TueDoublons1Term(L);
+            TueDoublons1(L);
         }else{
-            TueDoublons1Term(&(*L)->suite);
+            TueDoublons1(&(*L)->suite);
         }
     }
 }

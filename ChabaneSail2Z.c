@@ -71,22 +71,23 @@ int est_singelton(ListeZ acces){
 void ZElimine(ListeZ* acces){
 
     if(*acces != NULL){
+        // le bloc à liberer
+        Bloc* elimine = ***acces;
+
         // on doit traiter à part le cas du singleton parceque il nya aucun moyen de faire apparaitre le pointeur 
         // NULL sans l'écrire en dur dans le code
         if(est_singelton(*acces)){
             *acces = NULL;
         }else{
-        // le bloc à liberer
-        Bloc* elimine = ***acces;
-        // le pointeur next du dernier bloc pointe vers celui qui suit le bloc à liberer
-        ***acces = elimine->next;
-        // le pointeur prec du bloc suivant elimine doit pointer vers le next du dernier bloc
-        (elimine->next)->prec = **acces;
-        // on actualise acces
-        *acces = &((elimine->next)->prec);
+            // le pointeur next du dernier bloc pointe vers celui qui suit le bloc à liberer
+            ***acces = elimine->next;
+            // le pointeur prec du bloc suivant elimine doit pointer vers le next du dernier bloc
+            (elimine->next)->prec = **acces;
+            // on actualise acces
+            *acces = &((elimine->next)->prec);
+        }
 
         free(elimine);
-        }
 
     }
 
