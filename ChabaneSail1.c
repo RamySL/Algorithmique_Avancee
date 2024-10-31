@@ -153,9 +153,8 @@ void afficheYdouble (int n)
   double y = Efloat() - 1;
   printf("y(0) = %f\n", y);
   for(int i=1; i<=n; i++){
-    double ysuiv = i * y - 1;
-    y=ysuiv;
-    printf("y(%d) = %lf\n", i, ysuiv);
+    y = i * y - 1;
+    printf("y(%d) = %lf\n", i, y);
   }
 }
 
@@ -488,6 +487,4 @@ int main(int argc, char** argv)
 
 }
 #endif
-
-
 
