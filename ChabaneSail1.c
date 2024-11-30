@@ -7,7 +7,6 @@
 Binome : Chabane Oualid, Sail Ramy
 ramy.sail@etu-upsaclay.fr
 oualid.chabane@etu-upsaclay.fr
-
 */
 
 /*************************************************/
@@ -70,11 +69,6 @@ long long fact3(int n) {
   // e = 2,7182818284 5904523536 0287471352 6624977572 4709369995
   //       9574966967 6277240766 3035354759 4571382178 5251664274
   // il est bien sûr interdit d'injecter directement cette approximation
-
-/*
-- Ce qu'on doit controler c'est que le factoriel de n dépasse pas la limite qu'un float peut stockerù
-- et à quel point la fraction (1/fct) peut etre précise (cad avant qu'elle devient nulle)
-*/
 
 /*************************************************/
 /*
@@ -173,11 +167,10 @@ il vaut mieux rendre -1 quand n<0 ?
 float X1 (int n){
 
   float res = 1.0f;
-  int n_copie = n;
 
-  while(n_copie > 0){
+  while(n > 0){
     res = res + (1/res);
-    n_copie --;
+    n --;
   }
 
   return res;
@@ -217,32 +210,33 @@ float X4(int n){
   _X4(n,&res);
   return res;
 }
+
 /**
- * Après le test du calcul des X pour des puissances de 10, on constate que toutes les version recursive font crasher le prgramme
- * après 10^4, on déduit que le compilateur n'optimise pas les appels récursifs
+ * Après le test du calcul des X pour des puissances de 10, on constate que toutes les version recursive font crasher 
+ * le programme après 10^4, on déduit que le compilateur n'optimise pas les appels récursifs
  */
 
 long double X1_bis(long n){
   
   long double res = 1.0;
-  long n_copie = n;
 
-  while(n_copie > 0){
+  while(n > 0){
     res = res + (1/res);
-    n_copie --;
+    n --;
   }
 
   return res;
 }
 
 /*
-après l'utilisation de X1 avec long double on se rend compte les valeurs calculées par X1 devenaient clairement fauuses à partir de 10^7
+après l'utilisation de X1 avec long double (X1_bis) on se rend compte les valeurs calculées par X1 devenaient clairement fausses à partir de 10^7
 avec 4472.137049 pour X1_bis et 4096 pour X1 comme le montre les tests dans le main
 */
 
 
 /*
-calcule X(10^k) de 1 à k avec la fonction passée en argument
+  - fonction utilisée pour calculer la suite X avec les différentes fonction X1,X2...
+  - calcule X(10^k) de 1 à k avec la fonction passée en argument
 */
 void calcule_X_10_k (float (*X)(int n),int k){
   int pow = 1;
@@ -406,7 +400,7 @@ int main(int argc, char** argv)
           // e = 2,7182818284 5904523536 0287471352 6624977572 4709369995
           //       9574966967 6277240766 3035354759 4571382178 5251664274
 
-        if (true) {
+        if (false) {
                 printf("Valeurs de e en float et en double :\n") ;
                 printf(" e1 = %.20f\n e = 2.718281828459045235360287471352 7\n", Efloat() ) ;
                 printf(" e2 = %.20lf \n", Edouble() ) ;
@@ -430,7 +424,7 @@ int main(int argc, char** argv)
 
         }
         /* LA suite Xn*/
-        if(false){
+        if(true){
           /*Calcule de X100 avec les 4 fonction*/
           printf ("X(100) avec X1 donne : %f \n",X1(100));
           printf ("X(100) avec X2 donne : %f \n",X2(100));
@@ -438,9 +432,9 @@ int main(int argc, char** argv)
           printf ("X(100) avec X4 donne : %f \n",X4(100));
 
           printf ("\n");
-
+          /*
           printf("Calcule de X(10^k) avec k de 1 a 9 avec X1 \n\n");
-          calcule_X_10_k(X1,9);
+          calcule_X_10_k(X1,9);*/
 
           printf ("\n");
           /*
@@ -455,17 +449,18 @@ int main(int argc, char** argv)
           printf ("\n");
 
           printf("Calcule de X(10^k) avec k de 1 a 9 avec X4 \n\n");
-          calcule_X_10_k(X4,9);*/
+          calcule_X_10_k(X4,9);
+          */
 
           /*
 
-          !!! à cause d'un problème de compatibilité sur windows l'affichage des long double ne marche
+          !!! à cause d'un problème de compatibilité sur windows l'affichage des long double ne marche pas
           parceque le compilateur gcc est bien destiné à représenter long double sur 128 bits mais l'environement
           de microsoft sous windows utilise 64 bits, ce qui cause les bug d'affichage.
           - pour ça il faut compiler avec l'option : -D__USE_MINGW_ANSI_STDIO, pour forcer mingw à utiliser sa propre
           implementation des long double
           */
-
+          
           printf("Calcule de X(10^k) avec k de 1 a 12 avec X1_bis de type long double \n\n");
           long pow = 1;
           for (int i = 1; i<=12;i++){

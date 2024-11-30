@@ -262,7 +262,7 @@ int SommeAvantKieme0_iter (Liste L, int k){
 
     while (parcours != NULL && k_copie > 0){
 
-        if(L->valeur == 0){
+        if(parcours->valeur == 0){
             k_copie --;
         }
         res += parcours->valeur;
@@ -307,6 +307,41 @@ int SommeAvantKieme0_rec_terminal_sous_procedure (Liste L, int k){
     _SommeAvantKieme0_rec_terminal_sous_procedure(L,k,&res);
     return res;
 
+}
+
+/*************************************************/
+/*                                               */
+/*           sommeApresRetroKieme0               */
+/*                                               */
+/*************************************************/
+int sommeApresRetroKieme0_aux(Liste l, int k, int* cpt){
+    if(k==0 || l==NULL) return 0;
+    int res =  sommeApresRetroKieme0_aux(l->suite, k, cpt);
+    if(l->valeur==0){
+        *cpt = *cpt + 1;
+    } else if(*cpt<k) return l->valeur + res;
+    return res;
+}
+
+int sommeApresRetroKieme0(Liste l, int k){
+    int cpt = 0;
+    return sommeApresRetroKieme0_aux(l, k, &cpt);
+}
+
+
+Liste createlist(){
+  int nbr;
+  Liste l=NULL;
+  while(true){
+    printf("\nVoulez vous terminer la saisie? 0 (non) sinon (oui): ");
+    scanf("%d", &nbr);
+    if(nbr) break;
+    printf("\nSaisissez un nombre pour l'empiler: ");
+    scanf("%d", &nbr);
+    l = ajoute(nbr, l);
+
+  }
+  return l;
 }
 
 /*************************************************/
@@ -399,45 +434,9 @@ void TueDoublons2_iter (Liste* L){
             }
 
         }
-
         parcours_principale = &(*parcours_principale)->suite;
-
     }
-
 }
-
-/*************************************************/
-
-int sommeApresRetroKieme0_aux(Liste l, int k, int* cpt){
-    if(k==0 || l==NULL) return 0;
-    int res =  sommeApresRetroKieme0_aux(l->suite, k, cpt);
-    if(l->valeur==0){
-        *cpt = *cpt + 1;
-    } else if(*cpt<k) return l->valeur + res;
-    return res;
-}
-
-int sommeApresRetroKieme0(Liste l, int k){
-    int cpt = 0;
-    return sommeApresRetroKieme0_aux(l, k, &cpt);
-}
-
-
-Liste createlist(){
-  int nbr;
-  Liste l=NULL;
-  while(true){
-    printf("\nVoulez vous terminer la saisie? 0 (non) sinon (oui): ");
-    scanf("%d", &nbr);
-    if(nbr) break;
-    printf("\nSaisissez un nombre pour l'empiler: ");
-    scanf("%d", &nbr);
-    l = ajoute(nbr, l);
-
-  }
-  return l;
-}
-
 
 /*************************************************/
 /*                                               */
@@ -446,24 +445,82 @@ Liste createlist(){
 /*************************************************/
 
 
-int main(int argc, char** argv)
-{
-    Liste l, p ;
+int main() {
+    // Initialisation des listes pour les tests
+    Liste L = NULL;
+    Liste L_vide = NULL;
+    Liste L_unique = NULL;
+    Liste L_identiques = NULL;
+    Liste L_complexe = NULL;
+    Liste L_doublons_alt = NULL; // Liste pour le nouveau test
 
-        l = NULL ;
-        p = NULL;
-        empile(6, &l);
-        empile(5, &l);
-        empile(4, &l);
+    printf("Test 1 : Liste vide\n");
+    printf("Liste avant : ");
+    affiche_iter(L_vide);
+    TueDoublons2_iter(&L_vide);
+    printf("Liste apres : ");
+    affiche_iter(L_vide);
 
-        empile(9, &p);
-        empile(8, &p);
-        empile(7, &p);
+    printf("\nTest 2 : Liste avec un seul element\n");
+    empile(5, &L_unique);
+    printf("Liste avant : ");
+    affiche_iter(L_unique);
+    TueDoublons2_iter(&L_unique);
+    printf("Liste apres : ");
+    affiche_iter(L_unique);
 
+    printf("\nTest 3 : Liste avec des elements identiques\n");
+    empile(1, &L_identiques);
+    empile(1, &L_identiques);
+    empile(1, &L_identiques);
+    empile(1, &L_identiques);
+    printf("Liste avant : ");
+    affiche_iter(L_identiques);
+    TueDoublons2_iter(&L_identiques);
+    printf("Liste apres : ");
+    affiche_iter(L_identiques);
 
-        return 0;
+    printf("\nTest 4 : Liste avec plusieurs doublons\n");
+    empile(5, &L_complexe);
+    empile(2, &L_complexe);
+    empile(4, &L_complexe);
+    empile(5, &L_complexe);
+    empile(3, &L_complexe);
+    empile(2, &L_complexe);
+    empile(4, &L_complexe);
+    empile(3, &L_complexe);
+    printf("Liste avant : ");
+    affiche_iter(L_complexe);
+    TueDoublons2_iter(&L_complexe);
+    printf("Liste après : ");
+    affiche_iter(L_complexe);
+
+    printf("\nTest 5 : Liste avec alternance de doublons {1, 2, 1, 2}\n");
+    empile(2, &L_doublons_alt);
+    empile(1, &L_doublons_alt);
+    empile(2, &L_doublons_alt);
+    empile(1, &L_doublons_alt);
+    printf("Liste avant : ");
+    affiche_iter(L_doublons_alt);
+    TueDoublons2_iter(&L_doublons_alt);
+    printf("Liste après : ");
+    affiche_iter(L_doublons_alt);
+
+    while (L != NULL) {
+        depile(&L);
+    }
+    while (L_unique != NULL) {
+        depile(&L_unique);
+    }
+    while (L_identiques != NULL) {
+        depile(&L_identiques);
+    }
+    while (L_complexe != NULL) {
+        depile(&L_complexe);
+    }
+    while (L_doublons_alt != NULL) {
+        depile(&L_doublons_alt);
+    }
+
+    return 0;
 }
-
-
-
-
