@@ -87,7 +87,7 @@ float Efloat(){
       n++;
       ratio=1.0/fct;
       e+=ratio;
-      
+
   }while(ratio>0);
 
   return e;
@@ -212,12 +212,12 @@ float X4(int n){
 }
 
 /**
- * Après le test du calcul des X pour des puissances de 10, on constate que toutes les version recursive font crasher 
+ * Après le test du calcul des X pour des puissances de 10, on constate que toutes les version recursive font crasher
  * le programme après 10^4, on déduit que le compilateur n'optimise pas les appels récursifs
  */
 
 long double X1_bis(long n){
-  
+
   long double res = 1.0;
 
   while(n > 0){
@@ -265,48 +265,62 @@ long long BadCpn (int p, int n)  // 0 <= p <= n
 
 /*************************************************/
 
-long long _GoodCpn (long long memoize[], int p, int n, int p0){
-    //L aversion récursive avec la mémoization ressemble à la résolution
-    //avec la méthode de pascal en utilisant une table à 2 dimensions (programmation dynamique)
-    //mais avec cette version on effectue plus de tests sur p==0 ou p==n contrairement à la version itérative avec une matrice
-  if(p==0 || p == n) {
-    memoize[n * p0 + p] = 1;
-    return 1;
-  }
+void translation(int p, int n, const int L, const int W, int* tab){
+    if(p > n/2) p = n-p;
+    p--;
+    n-=2;
+    if(p >= L){
+        n = W - n;
+        p = 2 * L - 1 - p;
+    }
+    tab[0] = p;
+    tab[1] = n;
+}
 
-  if(memoize[(n - 1) * p0 + p ] == -1) memoize[(n - 1) * p0 + p] = _GoodCpn(memoize, p, n-1, p0);
-  if(memoize[(n-1) * p0 + p - 1] == -1) memoize[(n-1) * p0 + p - 1] = _GoodCpn(memoize, p-1, n-1, p0);
-  return memoize[(n - 1) * p0 + p] + memoize[(n - 1) * p0 + p - 1];
+long long _GoodCpn (long long** pascal_mat, const int mat_length, const int mat_width, int p, int n)
+{
+    if(n < p) return -1;
+
+    if(n==p || p==0) return 1;
+
+    int* tr = (int*) malloc(2 * sizeof(int));
+
+    translation(p, n, mat_length, mat_width, tr);
+    int p0=tr[0], n0=tr[1];
+
+    translation(p, n-1, mat_length, mat_width, tr);
+    int p1=tr[0], n1=tr[1];
+
+    translation(p-1, n-1, mat_length, mat_width, tr);
+    int p2=tr[0], n2=tr[1];
+
+    free(tr);
+
+    long long c1=pascal_mat[p1][n1], c2 = pascal_mat[p2][n2];
+
+    if(c1==-1) c1 = _GoodCpn(pascal_mat, mat_length, mat_width, p, n-1);
+    if(c2==-1) c1 = _GoodCpn(pascal_mat, mat_length, mat_width, p-1, n-1);
+
+    pascal_mat[p0][n0] = c1 + c2;
+
+    return pascal_mat[p0][n0];
+
 }
 long long GoodCpn (int p, int n)  // 0 <= p <= n
 {
-  // if(p<0 || n<p) {
-  //   printf("\nEntrees invalides.");
-  //   return -1;
-  // }
-  // long long denum, num=1;
-  // if(p>n-p)
-  //   // On s'assure que p est plus petit que n - p pour optimiser les boucles for en bas, qui s'arrêtent d'abord à p, puis à n - p, et enfin à n.
-  //   // On utilise la propriété C(p, n) = C(n - p, n).
-  //   p=n-p;
-  // for(int i=1; i<=p; i++) num*=i;
-  // //fact==p!
-  // denum=num;
-  // for(int i=p+1; i<=n-p; i++) num *=i;
+  if(n-2 < 0)
+    if(p <= n) return 1;
+    else return -1;
 
-  // //fact==(n-p)!
-  // denum*=num;
-  // for(int i=n-p+1; i<=n; i++) num *= i;
-  // return num/denum;
-  if(p<0 || n<p) {
-    printf("\nArguments invalides!");
-    return -1;
-  }
-    long long memoize[(n + 1) * (p + 1)];
-    for (int i = 0; i < (n + 1) * (p + 1); i++) memoize[i] = -1;
+  const int W = n-2;
+  const int L = ((int) ceil(n/2)) / 2 + 1;
 
+  long long** pascal_mat = (long long**) malloc(L * sizeof(long long*));
 
-  return _GoodCpn(memoize, p, n, p);
+  for(int i = 0; i<L; i++)
+    pascal_mat[i] = (long long*) malloc(W * sizeof(long long));
+
+  return _GoodCpn(pascal_mat, L, W, p, n);
 }
 /*************************************************/
 /*                                               */
@@ -424,7 +438,7 @@ int main(int argc, char** argv)
 
         }
         /* LA suite Xn*/
-        if(true){
+        if(false){
           /*Calcule de X100 avec les 4 fonction*/
           printf ("X(100) avec X1 donne : %f \n",X1(100));
           printf ("X(100) avec X2 donne : %f \n",X2(100));
@@ -460,7 +474,7 @@ int main(int argc, char** argv)
           - pour ça il faut compiler avec l'option : -D__USE_MINGW_ANSI_STDIO, pour forcer mingw à utiliser sa propre
           implementation des long double
           */
-          
+
           printf("Calcule de X(10^k) avec k de 1 a 12 avec X1_bis de type long double \n\n");
           long pow = 1;
           for (int i = 1; i<=12;i++){
