@@ -14,9 +14,9 @@ typedef Bloc*** ListeZ ;
 void empile(int x,ListeZ* ptr_acces){
     Bloc* ptr_block =  (Bloc*) malloc(sizeof(Bloc));
     ptr_block->valeur = x;
-    
+
     if(*ptr_acces != NULL){
-        // pas besoin de verifier tout les pointeurs si ils ne sont pas null 
+        // pas besoin de verifier tout les pointeurs si ils ne sont pas null
         //c'est nous on fait correctement la construction
 
         ptr_block->next = ***ptr_acces;
@@ -45,7 +45,7 @@ void afficheZ (ListeZ L){
         printf("%d ",ptr_premier_bloc->valeur);
         // celui là on va l'utiliser pour le parcours
         Bloc* parcours = ptr_premier_bloc->next;
-        
+
         while(parcours != ptr_premier_bloc){
             printf("%d ",parcours->valeur);
             parcours = parcours->next;
@@ -54,13 +54,13 @@ void afficheZ (ListeZ L){
     }else{
         printf("NULL\n");
     }
-   
+
 
 }
 
 /*
-- petite fonction auxilere pour ZElimine qui retourne si une liste à un seul element ou pas 
-- une liste est un singleton si le poniteur prec (*acces) pointe vers le pointeur 
+- petite fonction auxilere pour ZElimine qui retourne si une liste à un seul element ou pas
+- une liste est un singleton si le poniteur prec (*acces) pointe vers le pointeur
 next ((**acces)->next) du même bloc
 */
 
@@ -74,7 +74,7 @@ void ZElimine(ListeZ* acces){
         // le bloc à liberer
         Bloc* elimine = ***acces;
 
-        // on doit traiter à part le cas du singleton parceque il nya aucun moyen de faire apparaitre le pointeur 
+        // on doit traiter à part le cas du singleton parceque il nya aucun moyen de faire apparaitre le pointeur
         // NULL sans l'écrire en dur dans le code
         if(est_singelton(*acces)){
             *acces = NULL;
@@ -98,7 +98,7 @@ void main(){
     ListeZ acces = NULL;
     ZElimine(&acces);
     afficheZ(acces);
-    
+
     // on créer la liste pour tester ZElimine dessus
     empile(42,&acces);
     empile(93,&acces);
@@ -115,9 +115,9 @@ void main(){
 
     ZElimine(&acces);
     afficheZ(acces);
-    
+
     ZElimine(&acces);
     afficheZ(acces);
-    
+
 }
 

@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <float.h>
 #include <math.h>
-#include "Header.h"
-/*
+
+/***
 Binome : Chabane Oualid, Sail Ramy
 ramy.sail@etu-upsaclay.fr
-oualid.chabane@etu-upsaclay.fr
-*/
+oualid.chabane@universite-paris-saclay.fr
+***/
+
+typedef enum {false, true} bool;
 
 /*************************************************/
 /*                                               */
@@ -88,7 +90,7 @@ float Efloat(){
       ratio=1.0/fct;
       e+=ratio;
 
-  }while(ratio>0);
+  }while(ratio > 0);
 
   return e;
 }
@@ -103,8 +105,9 @@ double Edouble(){
       fct = fct * n;
       n++;
       ratio=1.0/fct;
-      e+=ratio;
-  }while(ratio>0);
+      e += ratio;
+  } while(ratio > 0);
+
   return e;
 }
 
@@ -116,14 +119,16 @@ double Edouble(){
 
 void afficheYfloat (int n)
 {
-  if(n<0) return;
+    /***
+    On constate que la suite diverge à partire de n=10
+    ***/
+  if(n < 0) return;
 
   float y = Efloat() - 1;
   printf("y(0) = %f\n", y);
   for(int i=1; i<=n; i++){
-    float ysuiv = i * y - 1;
-    y=ysuiv;
-    printf("y(%d) = %f\n", i, ysuiv);
+    y = i * y - 1;
+    printf("y(%d) = %f\n", i, y);
   }
 }
 
@@ -131,9 +136,14 @@ void afficheYfloat (int n)
 
 void afficheYdouble (int n)
 {
+    /***
+    On constate que la suite diverge à partir de n=15
+    Dû au fait que la valeur réelle de y15 est inférieure à la valeur calculée, la norme IEEE754 ne permet pas d'atteindre cette valeur
+    réelle, les mathématiques font diverger la suite parce qu'elle est sortie de son scope
+    ***/
   if(n<0) return;
 
-  double y = Efloat() - 1;
+  double y = Edouble() - 1;
   printf("y(0) = %f\n", y);
   for(int i=1; i<=n; i++){
     y = i * y - 1;
@@ -142,16 +152,19 @@ void afficheYdouble (int n)
 }
 
 void afficheZdouble(int n){
-    if(n<0) return;
-  double epsilon=1e-15;
-  double y = Efloat() - 1, z=y+epsilon;
-  printf("y(0) = %f\n", y);
-  for(int i=1; i<=n; i++){
-    double ysuiv = i * y - 1;
-    double zsuiv = i * z - 1;
-    y=ysuiv;
-    z=zsuiv;
-    printf("z(%d) - y(%d) = %lf\n", i, i, zsuiv - ysuiv);
+  if(n < 0) return;
+
+  double epsilon = 1e-15;
+  double y = Edouble() - 1;
+  double z = y + epsilon;
+
+  printf("z(0) - y(0) = %f\n", z - y);
+
+  for(int i = 1; i <= n; i++)
+  {
+    y = i * y - 1;
+    z = i * z - 1;
+    printf("z(%d) - y(%d) = %lf\n", i, i, z - y);
   }
 }
 
@@ -264,63 +277,100 @@ long long BadCpn (int p, int n)  // 0 <= p <= n
 }
 
 /*************************************************/
-
-void translation(int p, int n, const int L, const int W, int* tab){
-    if(p > n/2) p = n-p;
-    p--;
-    n-=2;
-    if(p >= L){
-        n = W - n;
-        p = 2 * L - 1 - p;
-    }
-    tab[0] = p;
-    tab[1] = n;
+int imageN(int n, int p){
+    return n - (p+1);
 }
 
-long long _GoodCpn (long long** pascal_mat, const int mat_length, const int mat_width, int p, int n)
-{
-    if(n < p) return -1;
-
-    if(n==p || p==0) return 1;
-
-    int* tr = (int*) malloc(2 * sizeof(int));
-
-    translation(p, n, mat_length, mat_width, tr);
-    int p0=tr[0], n0=tr[1];
-
-    translation(p, n-1, mat_length, mat_width, tr);
-    int p1=tr[0], n1=tr[1];
-
-    translation(p-1, n-1, mat_length, mat_width, tr);
-    int p2=tr[0], n2=tr[1];
-
-    free(tr);
-
-    long long c1=pascal_mat[p1][n1], c2 = pascal_mat[p2][n2];
-
-    if(c1==-1) c1 = _GoodCpn(pascal_mat, mat_length, mat_width, p, n-1);
-    if(c2==-1) c1 = _GoodCpn(pascal_mat, mat_length, mat_width, p-1, n-1);
-
-    pascal_mat[p0][n0] = c1 + c2;
-
-    return pascal_mat[p0][n0];
-
+int imageP(int p){
+    return p-1;
 }
-long long GoodCpn (int p, int n)  // 0 <= p <= n
+
+long long _GoodCpn (long long** pascal_mat, int p, int n)
 {
-  if(n-2 < 0)
-    if(p <= n) return 1;
-    else return -1;
+    /***
+     Pour calculer C(p, n), seules certaines cases du triangle de Pascal sont utilisées (#) :
 
-  const int W = n-2;
-  const int L = ((int) ceil(n/2)) / 2 + 1;
+     | | | | | | | | | | | | | | | | | | |
+     | | |#|#|#|#|#|#|#|#|#|#|#| | | | | |
+     | | | |#|#|#|#|#|#|#|#|#|#|#| | | | |
+     | | | | |#|#|#|#|#|#|#|#|#|#|#| | | |
+     | | | | | |#|#|#|#|#|#|#|#|#|#|#| | |
+     | | | | | | |#|#|#|#|#|#|#|#|#|#|#| |
+     | | | | | | | |#|#|#|#|#|#|#|#|#|#| | <- On veut calculer ça
+     | | | | | | | | | | | | | | | | | | |
+     | | | | | | | | | | | | | | | | | | |
+     | | | | | | | | | | | | | | | | | | |
+     | | | | | | | | | | | | | | | | | | |
+     | | | | | | | | | | | | | | | | | | |
+     | | | | | | | | | | | | | | | | | | |
 
+     1. La diagonale (C(p, p) = 1)
+     2. La première ligne (C(0, n) = 1)
+     Leurs valeures sont toujours à 1, donc on n'a pas besoin de les stocker dans la matrice finale
+
+     L'espace utilisé peut être transformé en une matrice compacte de taille p × (n - p) :
+     |#|#|#|#|#|#|#|#|#|#|#|
+     |#|#|#|#|#|#|#|#|#|#|#|
+     |#|#|#|#|#|#|#|#|#|#|#|
+     |#|#|#|#|#|#|#|#|#|#|#|
+     |#|#|#|#|#|#|#|#|#|#|#|
+     |#|#|#|#|#|#|#|#|#|#|#|
+
+     La position de C(p, n) est obtenue par une translation (1, p + 1) :
+     Position de C(p, n) dans la matrice en appliquant la translation est [p - 1][n - (p + 1)]
+    ***/
+    if(p==n || p==0) return 1;
+    if(pascal_mat[imageP(p)][imageN(n, p)] != -1) return pascal_mat[imageP(p)][imageN(n, p)];
+    long long c1 = _GoodCpn(pascal_mat, p, n-1);
+    long long c2 = _GoodCpn(pascal_mat, p-1, n-1);
+
+    pascal_mat[imageP(p)][imageN(n, p)] = c1+c2;
+
+    return pascal_mat[imageP(p)][imageN(n, p)];
+}
+long long GoodCpn (int p, int n)
+{
+/***
+    La taille de la matrice qui va contenir le triangle de pascale va dépendre de n et p
+    La matrice qui va contenire le triangle de Pascale est de taille p * (n-p)
+        Explication:
+    Si on utilise une matrice de taille (n+1) * (p+1) seulement sa moitié va etre utilisé
+
+    On a deux optimisations:
+        1) - on a supprimé les cases qui contient que des 1, on traite le cas
+        de 1 dans la fonction récursive, on n'a pas besoin de stoquer une valeur qu'on connais déja.
+        2) - On a supprimé le triangle vide non utilisé avec une simple fonction d'image qui fait une
+        conversion du plan (p, n) vers le plan matriciel [0..p][0..(n-p)]
+        2-bis) Une optimisation qu'on a voulu rajouter mais on n'a pas pu à cause de sa complexité est d'éliminer
+        la case qui contient C(n-p, n) si on a déja une case qui contient C(p, n)
+***/
+  //Erreur si p>n
+  if(p > n) return -1;
+
+//L: length, nombre de lignes
+//W: Width, nombre de colonnes
+  int L = p;
+  int W = n-p;
+//Allocation de la matrice
   long long** pascal_mat = (long long**) malloc(L * sizeof(long long*));
 
   for(int i = 0; i<L; i++)
-    pascal_mat[i] = (long long*) malloc(W * sizeof(long long));
+   {
+       pascal_mat[i] = (long long*) malloc(W * sizeof(long long));
+       for(int j=0; j<W; j++){
+            pascal_mat[i][j] = -1;
+       }
+   }
+   //Calcule du résultat
+  long long ret = _GoodCpn(pascal_mat, p, n);
 
-  return _GoodCpn(pascal_mat, L, W, p, n);
+  for(int i = 0; i<L; i++)
+   {
+       free(pascal_mat[i]);
+   }
+   free(pascal_mat);
+
+  return ret;
 }
 /*************************************************/
 /*                                               */
@@ -328,7 +378,6 @@ long long GoodCpn (int p, int n)  // 0 <= p <= n
 /*                                               */
 /*************************************************/
 
-//#ifdef COMMENT_OUT
 int main(int argc, char** argv)
 {
 
@@ -416,15 +465,17 @@ int main(int argc, char** argv)
 
         if (false) {
                 printf("Valeurs de e en float et en double :\n") ;
-                printf(" e1 = %.20f\n e = 2.718281828459045235360287471352 7\n", Efloat() ) ;
-                printf(" e2 = %.20lf \n", Edouble() ) ;
-                //printf(" e3 = %.20Lf \n", ElongDouble() ) ;
+                printf(" float : e1 = %.20f\n"
+                       " reele :  e = 2.7182818284590452353602874713527\n", Efloat() ) ;
+                printf(" double: e2 = %.20lf \n", Edouble() ) ;
         }
 
-        if (false) {
-                    printf("Valeurs de Y, selon float, double :\n") ;
+        if (true) {
+                    printf("Valeurs de Y, selon float, double :\n\nYFloat:\n") ;
                     afficheYfloat(30) ;
+                    printf("\nYDouble:\n");
                     afficheYdouble(30) ;
+                    printf("\nZDouble:\n");
                     afficheZdouble(30);
         }
 
@@ -484,7 +535,5 @@ int main(int argc, char** argv)
           printf("\n");
 
         }
-
 }
-//#endif
 

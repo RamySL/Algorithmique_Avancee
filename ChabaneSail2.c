@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "Header.h"
-/*
+
+/***
 Binome : Chabane Oualid, Sail Ramy
 ramy.sail@etu-upsaclay.fr
 oualid.chabane@etu-upsaclay.fr
 
-*/
+***/
+
+typedef enum {false, true} bool;
 
 /*************************************************/
 /*                                               */
@@ -29,9 +31,9 @@ typedef Bloc *Liste ;
 /*************************************************/
 
 
-/*** les 5 fonctionnalit�s suivantes sont plus du sucre syntaxique que du code utile  ***/
-/*** sauf � vouloir pouvoir basculer � moindre frais sur une impl�menation des listes ***/
-/**** diff�rentes des listes chain�es propos�es dans le cadre de ce projet            ***/
+/*** les 5 fonctionnalités suivantes sont plus du sucre syntaxique que du code utile  ***/
+/*** sauf � vouloir pouvoir basculer � moindre frais sur une implémenation des listes ***/
+/**** différentes des listes chain�es proposées dans le cadre de ce projet            ***/
 
 // Liste Vide() { return NULL ; }
 // void initVide(Liste *L) { *L = NULL ; }
@@ -231,7 +233,7 @@ bool sousEnsemble(Liste l1, Liste l2){
     // Cela fonctionne même si l1 est vide initialement, car une liste vide est incluse dans toutes les listes, y compris dans la liste vide elle-même.
 
     //Conversion de type autmatique
-    return l1==NULL;
+    return l1 == NULL;
 }
 /********************************************/
 /*                                          */
@@ -353,7 +355,7 @@ Liste createlist(){
 /*
 - parcours la liste L et à chaque fois qu'une occurence autre que celle pointée par check_point est trouvée
 dépile check_pointe pour garder à chaque fois l'occurence la plus récente du parcours et donc la dernière occurence
- */
+*/
 void _retirePremieresOccTerm(Liste* check_point,Liste* L,bool *depilement){
     if((*L)!=NULL){
         if((*check_point)->valeur == (*L)->valeur){
@@ -506,6 +508,41 @@ int main() {
     printf("Liste après : ");
     affiche_iter(L_doublons_alt);
 
+    Liste l1_test_sens = NULL, l2_test_sens=NULL;
+    empile(3, &l1_test_sens);
+    empile(1, &l1_test_sens);
+    empile(3, &l2_test_sens);
+    empile(2, &l2_test_sens);
+    empile(1, &l2_test_sens);
+    empile(0, &l2_test_sens);
+    printf("\nTest 5:(sous-ensemble)");
+    printf("\n\tListe l1: ");
+    affiche_iter(l1_test_sens);
+    printf("\tListe l2: ");
+    affiche_iter(l2_test_sens);
+    if(sousEnsemble(l1_test_sens, l2_test_sens)) printf("\n\tOui, l1 est sousensemble de l2");
+    else printf("\tNon, l1 n'est pas sousensemble de l2");
+
+    printf("\nTest 6:");
+    Liste test_somme_retro_kieme = NULL;
+    empile(0, &test_somme_retro_kieme);
+    empile(2, &test_somme_retro_kieme);
+    empile(8, &test_somme_retro_kieme);
+    empile(0, &test_somme_retro_kieme);
+    empile(0, &test_somme_retro_kieme);
+    empile(9, &test_somme_retro_kieme);
+    empile(4, &test_somme_retro_kieme);
+    empile(0, &test_somme_retro_kieme);
+    empile(1, &test_somme_retro_kieme);
+    empile(0, &test_somme_retro_kieme);
+    empile(3, &test_somme_retro_kieme);
+    empile(2, &test_somme_retro_kieme);
+    printf("\n\tListe: ");
+    affiche_iter(test_somme_retro_kieme);
+    printf("\tSome apres retro kieme (k=4): %d\n", sommeApresRetroKieme0(test_somme_retro_kieme, 4));
+    VideListe(&l1_test_sens);
+    VideListe(&l2_test_sens);
+    VideListe(&test_somme_retro_kieme);
     while (L != NULL) {
         depile(&L);
     }

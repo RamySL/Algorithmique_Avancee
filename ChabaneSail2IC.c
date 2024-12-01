@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "Header.h"
 
+typedef enum {false, true} bool;
 
 /*************************************************/
 /*                                               */
@@ -124,8 +124,8 @@ Liste2 concatene(Liste2 l1, Liste2 l2){
 }
 
 void concatene_no_leak(Liste2* l1, Liste2 l2){
-    // La fonction concat naïve effectue une copie implicite inutile des éléments de la liste l1.
-    // Concaténation de deux listes de type Liste2.
+    /*** La fonction concat naïve effectue une copie implicite inutile des éléments de la liste l1.
+     Concaténation de deux listes de type Liste2. ***/
 
     if(*l1==NULL){
       *l1=l2;
@@ -155,16 +155,15 @@ Liste2 AETTL(int x, Liste2 l){
 }
 
 void AETTL_no_leak(int x, Liste2 l){
-    // On peut réécrire cette fonction de manière équivalente, en remplaçant `ajouter2`
-    // par une simple affectation qui met à jour la référence de l'ancienne tête de liste `l`
-    // par la nouvelle tête référencée, correspondant à la liste étendue.
+    /*** On peut réécrire cette fonction de manière équivalente, en remplaçant `ajouter2`
+     par une simple affectation qui met à jour la référence de l'ancienne tête de liste `l`
+     par la nouvelle tête référencée, correspondant à la liste étendue.***/
     if(l!=NULL){
         AETTL_no_leak(x, l->suite);
 
         l->valeur = ajoute(x, l->valeur);
     }
 }
-
 
 Liste2 listeinterclassements(Liste l1, Liste l2){
     //la fonction des interclassements avec fuites mémoires
@@ -180,18 +179,18 @@ Liste2 listeinterclassements(Liste l1, Liste l2){
 
 
 Liste2 listeinterclassements_no_leak(Liste l1, Liste l2){
-    // Les fonctions responsables des fuites de mémoire sont `concatener` et `AETTL`.
-    // Les fuites de mémoire concernent principalement la structure `Bloc2` et non `Bloc1`.
-    // Le programme ne présente pas de fuites de mémoire au niveau des objets de type `Bloc1`.
+    /*** Les fonctions responsables des fuites de mémoire sont `concatener` et `AETTL`.
+     Les fuites de mémoire concernent principalement la structure `Bloc2` et non `Bloc1`.
+     Le programme ne présente pas de fuites de mémoire au niveau des objets de type `Bloc1`.
 
-    // La fonction `concatener` utilise la fonction `ajoute2` pour chaque élément à ajouter.
-    // Cela recrée à chaque fois un nouvel élément, rendant l'ancien premier élément inutilisable.
-    // Par conséquent, cet espace mémoire devient perdu (fuite de mémoire).
+     La fonction `concatener` utilise la fonction `ajoute2` pour chaque élément à ajouter.
+     Cela recrée à chaque fois un nouvel élément, rendant l'ancien premier élément inutilisable.
+     Par conséquent, cet espace mémoire devient perdu (fuite de mémoire).
 
-    // De même, la fonction `AETTL` génère une fuite mémoire dans la fonction `ajoute2`.
-    // À chaque fois, l'élément `x` est ajouté au sommet de la liste et la liste résultante
-    // est stockée dans un nouveau bloc de type `Bloc2`.
-    // Cela rend l'ancien bloc inutilisable, ce qui entraîne une fuite mémoire.
+     De même, la fonction `AETTL` génère une fuite mémoire dans la fonction `ajoute2`.
+     À chaque fois, l'élément `x` est ajouté au sommet de la liste et la liste résultante
+     est stockée dans un nouveau bloc de type `Bloc2`.
+     Cela rend l'ancien bloc inutilisable, ce qui entraîne une fuite mémoire. ***/
 
     Liste2 l=NULL;
     if(l1==NULL) return ajoute2(copy(l2), l);
