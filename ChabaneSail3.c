@@ -19,45 +19,41 @@ typedef struct maillon {
 
 typedef struct maillon* pile;
 
-void empiler(void* val, int size, pile* Pile) {
+/*
+     Dans notre utilisation de la pile, on stock dedans des pointeurs vers des strcutures deja alloués dans le tas
+     donc pas besoin d'allouer de la mémoire pour le pointeur val du maillon
+*/
+void empiler(void* val, pile* Pile) {
 
     Block* head = (Block*) malloc(sizeof(Block));
 
-    head->val = malloc(size);
-    if(val != NULL){
-        memcpy(head->val, val, size);
-    }else{
-        head->val = NULL;
-    }
-    
+    head->val = val;
     head->next = *Pile;
     *Pile = head;
 }
 
-void depiler(void* dest, int size, pile* Pile) {
+void* depiler(pile* Pile) {
     if (*Pile == NULL) {
         printf("Pile vide\n");
-        return;
+        return NULL;
     }
+
     Block* top = *Pile;
-    if(top->val != NULL){
-        memcpy(dest, top->val, size);
-        *Pile = top->next;
-        free(top->val);
-    }else{
-        dest = NULL;
-        *Pile = top->next;
-    }
+    void * res = top->val;
+
+    *Pile = top->next;
     free(top);
+
+    return res;
 
 }
 
-void peek(void* dest, int size, pile Pile) {
+void* peek(pile Pile) {
     if (Pile == NULL) {
         printf("Pile vide\n");
-        return;
+        return NULL;
     }
-    memcpy(dest, Pile->val, size); // Copy the top element's value to the destination
+    return Pile->val;
 }
 /*************************************************/
 /*                                               */
@@ -186,11 +182,10 @@ image LireI () {
 
     while ((c = getchar()) != '\n' && (c!= EOF)) {
         if(c == '+'){
-            printf("Dans le + \n");
-            int cpt = 0;
-            empiler(&cpt,sizeof(int),&pile_compteur);
+            int* cpt = (int*) malloc(sizeof(int));
+            *cpt=0;
+            empiler(cpt,&pile_compteur);
         }else if (c == 'N' || c == 'b'){
-            printf("Dans le c ou b \n");
             // ici on est sur le cas ou l'image est soit completement en blanc soit en noir, pas sub division en 4
             if (pile_compteur == NULL){
                 if (c == 'N'){
@@ -199,83 +194,63 @@ image LireI () {
                     return Bc();
                 }
             }
-            int top_cpt; 
-            peek(&top_cpt,sizeof(int),pile_compteur);
+            int top_cpt = *((int*) peek(pile_compteur));
             // on vient de former une quadtree
             while(top_cpt == 4){
-                printf("Dans le while du c ou b \n");
                 image i0,i1,i2,i3;
-                depiler(i3,sizeof(bloc_image),&pile_images);
-                depiler(i2,sizeof(bloc_image),&pile_images);
-                depiler(i1,sizeof(bloc_image),&pile_images);
-                depiler(i0,sizeof(bloc_image),&pile_images);
+                i3 = depiler(&pile_images);
+                i2 = depiler(&pile_images);
+                i1 = depiler(&pile_images);
+                i0 = depiler(&pile_images);
                 image qt = Qt(i0,i1,i2,i3);
-                empiler(qt,sizeof(bloc_image),&pile_images);
+                empiler(qt,&pile_images);
 
                 // on depile le compteur avec lequel on a terminé
                 // on incrémente le compteur suivant après dépilement
-                int cpt; 
-                depiler(&cpt,sizeof(int),&pile_compteur); // on a enlevé le 4
-                depiler(&cpt,sizeof(int),&pile_compteur);
-                cpt++;
-                empiler(&cpt,sizeof(int),&pile_compteur);
-                top_cpt = cpt;
-
+                int* cpt; 
+                depiler(&pile_compteur); // on a enlevé le 4
+                cpt = (int*)depiler(&pile_compteur);
+                (*cpt)++;
+                empiler(cpt,&pile_compteur);
+                top_cpt = *cpt;
             }
             if(c=='N'){
-                printf("Dans le N \n");
                 image img = Nr();
-                empiler(img,sizeof(bloc_image),&pile_images);
-                int cpt;
-                depiler(&cpt,sizeof(int),&pile_compteur);
-                cpt++;
-                empiler(&cpt,sizeof(int),&pile_compteur);
-            }else if (c=='b'){
-                printf("Dans le b \n");
+                empiler(img,&pile_images);
+            }else{
                 image img = Bc();
-                empiler(img,sizeof(bloc_image),&pile_images);
-                int cpt;
-                depiler(&cpt,sizeof(int),&pile_compteur);
-                cpt++;
-                empiler(&cpt,sizeof(int),&pile_compteur);
+                empiler(img,&pile_images);
             }
+            // un peek et une modif avec le pointeur au lieu de free puis malloc
+            int* cpt = (int*)depiler(&pile_compteur);
+            (*cpt)++;
+            empiler(cpt,&pile_compteur);
         }
     }
 
-    int top_cpt; 
-    peek(&top_cpt,sizeof(int),pile_compteur);
+    int top_cpt = *((int*) peek(pile_compteur));
             // on vient de former une quadtree
     while(top_cpt == 4 ){
-        printf("Dans le while de fin \n");
         image i0,i1,i2,i3;
-        depiler(i3,sizeof(bloc_image),&pile_images);
-        printf("apres premier depile \n");
-        depiler(i2,sizeof(bloc_image),&pile_images);
-        depiler(i1,sizeof(bloc_image),&pile_images);
-        depiler(i0,sizeof(bloc_image),&pile_images);
-        printf("apres les depilement");
+        i3 = depiler(&pile_images);
+        i2 = depiler(&pile_images);
+        i1 = depiler(&pile_images);
+        i0 = depiler(&pile_images);
         image qt = Qt(i0,i1,i2,i3);
-        empiler(qt,sizeof(bloc_image),&pile_images);
-
-        
+        empiler(qt,&pile_images);
         // on depile le compteur avec lequel on a terminé
         // on incrémente le compteur suivant après dépilement
-        int cpt; 
-        depiler(&cpt,sizeof(int),&pile_compteur); // on a enlevé le 4
+        int* cpt; 
+        depiler(&pile_compteur); // on a enlevé le 4
         if (pile_compteur != NULL){
-            printf("dans le diff de null");
-                depiler(&cpt,sizeof(int),&pile_compteur);
-                cpt++;
-                empiler(&cpt,sizeof(int),&pile_compteur);
-                top_cpt = cpt;
+                cpt = (int*) depiler(&pile_compteur);
+                (*cpt)++;
+                empiler(cpt,&pile_compteur);
+                top_cpt = *cpt;
         }else{
-            printf("dans le egale Null");
-            image img; 
-            depiler(img,sizeof(bloc_image),&pile_images);
-            return img;
+            return depiler(&pile_images);
+            
         }
-
-        
     }
   
     printf ("Saisie Invalide \n");
@@ -285,11 +260,46 @@ image LireI () {
 }
 
 
+/*************************************************/
+/*                                               */
+/*             5                                 */
+/*                                               */
+/*************************************************/
+
+bool Noir(image img){
+    if(img == NULL){
+        return true;
+    }
+
+    if(img -> blanc){
+        return false;
+    }
+
+    return Noir(img->Im[0]) && Noir(img->Im[1]) && Noir(img->Im[2]) && Noir(img->Im[3]);
+}
+
+bool Blanc(image img){
+    if(img == NULL){
+        return false;
+    }
+
+    if(img -> blanc){
+        return true;
+    }
+
+    return Blanc(img->Im[0]) && Blanc(img->Im[1]) && Blanc(img->Im[2]) && Blanc(img->Im[3]);
+}
+
+
+
+
 void main() {
    image i0,i1,i2,i3;
    i0=Nr();
    image img_l = LireI();
    printf("Maintenant la comparaison : \n");
    PrintI (img_l);
+   
+
 
 }
