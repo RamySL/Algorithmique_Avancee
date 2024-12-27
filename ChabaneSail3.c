@@ -55,6 +55,24 @@ void* peek(pile Pile) {
     }
     return Pile->val;
 }
+
+void affiche_pile(pile Pile) {
+    if (Pile == NULL) {
+        printf("Pile vide\n");
+        return;
+    }
+
+    printf("Pile contents:\n");
+
+    Block* current = Pile;
+    while (current != NULL) {
+        printf("- %p \n",(current->val)); 
+        current = current->next;
+    }
+
+    printf("End of pile\n");
+}
+
 /*************************************************/
 /*                                               */
 /*            Définition de types                */
@@ -87,9 +105,12 @@ Mode simple explication :
 /*                     1                         */
 /*                                               */
 /*************************************************/
+int nb_malloc = 0;
 
 image Bc() {
     image img =  ((image) malloc (sizeof(struct bloc_image)));
+    printf("Allocation de la memoire avec l'adresse : %p \n",img);
+    nb_malloc++;
     img -> blanc = true;
     return img;
 }
@@ -100,6 +121,8 @@ image Nr() {
 
 image Qt(image i0,image i1,image i2,image i3){
     image img =  ((image) malloc (sizeof(struct bloc_image)));
+    printf("Allocation de la memoire avec l'adresse : %p \n",img);
+    nb_malloc++;
     img -> blanc = false;
 
     img->Im[0] = i0;
@@ -181,22 +204,9 @@ image LireI () {
     printf("Entrez l'image en mode simple (soummetez avec la touche entrer):\n");
 
     while ((c = getchar()) != '\n' && (c!= EOF)) {
-        if(c == '+'){
-            int* cpt = (int*) malloc(sizeof(int));
-            *cpt=0;
-            empiler(cpt,&pile_compteur);
-        }else if (c == 'N' || c == 'b'){
-            // ici on est sur le cas ou l'image est soit completement en blanc soit en noir, pas sub division en 4
-            if (pile_compteur == NULL){
-                if (c == 'N'){
-                    return Nr();
-                }else if(c == 'b'){
-                    return Bc();
-                }
-            }
-            int top_cpt = *((int*) peek(pile_compteur));
+            int top_cpt; 
             // on vient de former une quadtree
-            while(top_cpt == 4){
+            while(pile_compteur != NULL && (top_cpt = *((int*) peek(pile_compteur))) == 4){
                 image i0,i1,i2,i3;
                 i3 = depiler(&pile_images);
                 i2 = depiler(&pile_images);
@@ -214,6 +224,19 @@ image LireI () {
                 empiler(cpt,&pile_compteur);
                 top_cpt = *cpt;
             }
+        if(c == '+'){
+            int* cpt = (int*) malloc(sizeof(int));
+            *cpt=0;
+            empiler(cpt,&pile_compteur);
+        }else if (c == 'N' || c == 'b'){
+            // ici on est sur le cas ou l'image est soit completement en blanc soit en noir, pas sub division en 4
+            if (pile_compteur == NULL){
+                if (c == 'N'){
+                    return Nr();
+                }else if(c == 'b'){
+                    return Bc();
+                }
+            }
             if(c=='N'){
                 image img = Nr();
                 empiler(img,&pile_images);
@@ -227,8 +250,8 @@ image LireI () {
             empiler(cpt,&pile_compteur);
         }
     }
-
-    int top_cpt = *((int*) peek(pile_compteur));
+    int top_cpt;
+    top_cpt = *((int*) peek(pile_compteur));
             // on vient de former une quadtree
     while(top_cpt == 4 ){
         image i0,i1,i2,i3;
@@ -243,10 +266,10 @@ image LireI () {
         int* cpt; 
         depiler(&pile_compteur); // on a enlevé le 4
         if (pile_compteur != NULL){
-                cpt = (int*) depiler(&pile_compteur);
-                (*cpt)++;
-                empiler(cpt,&pile_compteur);
-                top_cpt = *cpt;
+            cpt = (int*) depiler(&pile_compteur);
+            (*cpt)++;
+            empiler(cpt,&pile_compteur);
+            top_cpt = *cpt;
         }else{
             return depiler(&pile_images);
             
@@ -291,15 +314,94 @@ bool Blanc(image img){
 }
 
 
+/*************************************************/
+/*                                               */
+/*             Damier                            */
+/*                                               */
+/*************************************************/
+
+image _Damier(int p){
+    if(p==1){
+        return Qt(Bc(),Nr(),Nr(),Bc());
+    }
+
+    return Qt(_Damier(p-1),_Damier(p-1),_Damier(p-1),_Damier(p-1));
+}
+image Damier(int p){
+    if (p==0){
+        return Nr();
+    }
+    return _Damier(p);
+    
+}
+
+/*************************************************/
+/*                                               */
+/*            DemiTour                           */
+/*                                               */
+/*************************************************/
+
+image DemiTour(image img){
+
+    if (img == NULL){
+        return Nr();
+    }
+
+    if(img->blanc){
+        return Bc();
+    }
+
+    return Qt(DemiTour(img->Im[3]), DemiTour(img->Im[2]), DemiTour(img->Im[1]), DemiTour(img->Im[0]));
+}
+
+/*************************************************/
+/*                                               */
+/*            8                                  */
+/*                                               */
+/*************************************************/
+
+/*
+- Il faut supprimer en remontant les appels 
+- Donc on fait une version itérative pour éviter les débordement de piles
+*/
+
+/*
+- procédure qui parcoure tout l'arbre et empile les pointeurs des images dans la pile passée en inout
+*/
+void collect_ptrs (image img, pile* Pile){
+    if(img != NULL){
+        empiler(img,Pile);
+        if(!img->blanc){
+            collect_ptrs(img->Im[0],Pile);
+            collect_ptrs(img->Im[1],Pile);
+            collect_ptrs(img->Im[2],Pile);
+            collect_ptrs(img->Im[3],Pile);
+        }
+    }
+}
+/*
+- On fait deux passes pour libérer les blocs, une passe pour collecter les pointeurs dans
+une pile
+- Une autre passe pour le parcours de la pile et la libération des blocs en commençant par les feuilles
+*/
+
+void FreeImage(image img){
+    pile Pile = NULL;
+    collect_ptrs(img,&Pile);
+
+    while (Pile != NULL){
+        image i = depiler(&Pile);
+        free(i);
+        printf("libeartion de la memoire : %p \n",i);
+        nb_malloc--;
+    }
+
+}
 
 
 void main() {
-   image i0,i1,i2,i3;
-   i0=Nr();
-   image img_l = LireI();
-   printf("Maintenant la comparaison : \n");
-   PrintI (img_l);
+    image img = LireI();
+    FreeImage(img);
+    printf("nb malloc restant %d \n",nb_malloc);
    
-
-
 }
