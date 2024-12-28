@@ -34,7 +34,7 @@ void empiler(void* val, pile* Pile) {
 
 void* depiler(pile* Pile) {
     if (*Pile == NULL) {
-        printf("Pile vide\n");
+        printf("Depilement : Pile vide\n");
         return NULL;
     }
 
@@ -50,7 +50,7 @@ void* depiler(pile* Pile) {
 
 void* peek(pile Pile) {
     if (Pile == NULL) {
-        printf("Pile vide\n");
+        printf("Peek : Pile vide\n");
         return NULL;
     }
     return Pile->val;
@@ -184,11 +184,11 @@ void PrintPf(image img){
 
 /*
 - On utilise deux pile : une pile pour compter le nombre de composante construite pour le constructeur + courant
-- une pile pour stocker les lettre b et N 
+- une pile pour stocker les images
 
 - quand on a un + qui est saisie on empile un 0 dans la pile des compteur
 - quand un compteur atteint 4 on le dépile et on icrémente le nouveau sommet  et on dépile 
-    4 élément de la pile des lettre et on empile l'image qu'ils forment
+    4 élément de la pile des images et on empile l'image qu'ils forment avec Qt
 
 */
 
@@ -204,6 +204,8 @@ image LireI () {
     printf("Entrez l'image en mode simple (soummetez avec la touche entrer):\n");
 
     while ((c = getchar()) != '\n' && (c!= EOF)) {
+
+        if(c == '+' || c == 'b' || c == 'N'){
             int top_cpt; 
             // on vient de former une quadtree
             while(pile_compteur != NULL && (top_cpt = *((int*) peek(pile_compteur))) == 4){
@@ -224,30 +226,32 @@ image LireI () {
                 empiler(cpt,&pile_compteur);
                 top_cpt = *cpt;
             }
-        if(c == '+'){
-            int* cpt = (int*) malloc(sizeof(int));
-            *cpt=0;
-            empiler(cpt,&pile_compteur);
-        }else if (c == 'N' || c == 'b'){
-            // ici on est sur le cas ou l'image est soit completement en blanc soit en noir, pas sub division en 4
-            if (pile_compteur == NULL){
-                if (c == 'N'){
-                    return Nr();
-                }else if(c == 'b'){
-                    return Bc();
+
+            if(c == '+'){
+                int* cpt = (int*) malloc(sizeof(int));
+                *cpt=0;
+                empiler(cpt,&pile_compteur);
+            }else {
+                // ici on est sur le cas ou l'image est soit completement en blanc soit en noir, pas sub division en 4
+                if (pile_compteur == NULL){
+                    if (c == 'N'){
+                        return Nr();
+                    }else if(c == 'b'){
+                        return Bc();
+                    }
                 }
+                if(c=='N'){
+                    image img = Nr();
+                    empiler(img,&pile_images);
+                }else{
+                    image img = Bc();
+                    empiler(img,&pile_images);
+                }
+                // un peek et une modif avec le pointeur au lieu de free puis malloc
+                int* cpt = (int*)depiler(&pile_compteur);
+                (*cpt)++;
+                empiler(cpt,&pile_compteur);
             }
-            if(c=='N'){
-                image img = Nr();
-                empiler(img,&pile_images);
-            }else{
-                image img = Bc();
-                empiler(img,&pile_images);
-            }
-            // un peek et une modif avec le pointeur au lieu de free puis malloc
-            int* cpt = (int*)depiler(&pile_compteur);
-            (*cpt)++;
-            empiler(cpt,&pile_compteur);
         }
     }
     int top_cpt;
@@ -398,10 +402,170 @@ void FreeImage(image img){
 
 }
 
+/*************************************************/
+/*                                               */
+/*           Simplifie                           */
+/*                                               */
+/*************************************************/
+
+/*
+    Précondition : profondeur min 1
+    - la fonction regarde qu'a la profondeur sur laquelle l'argument est
+    - si l'image contient que des feuilles blanches renvoie 1, si que
+    des feuilles noires renvoie 0, si pas monochrome renvoie -1
+*/
+int estMono(image img){
+    int countB = 0;
+    int countN = 0;
+    int i = 0;
+    
+    while (i<4){
+        if(img->Im[i] == NULL){
+            countN ++;
+        }else{
+            if(img->Im[i]->blanc){
+                countB ++;
+            }
+        }
+        i++;
+    }
+    if(countN == 4){
+        return 0;
+    }
+
+    if(countB == 4){
+        return 1;
+    }
+    return -1;
+}
+/*
+- elimine les premiers monochromes trouvés qui sont sur la même profondeur, élimine 4 monochrome 
+maximum en un seul appel, et 1 au min si il existe
+- renvoie vrai dans le cas où il y'avait un monochrome faux sinon
+*/
+bool ElimineMono1Gen(image* img){
+
+    if(*img != NULL && !(*img)->blanc){
+        int mono = estMono(*img);
+        if(mono != -1){
+            FreeImage(*img);
+            //remplacement de +bbbb par b
+            if(mono == 1){
+                *img = Bc();
+            }
+            // remplacement de +NNNN par N
+            else{
+                *img = NULL;
+            }
+
+            return true;
+        }
+
+        return (ElimineMono1Gen (&((*img)->Im[0])) ||
+                ElimineMono1Gen (&((*img)->Im[1])) ||
+                ElimineMono1Gen (&((*img)->Im[2])) ||
+                ElimineMono1Gen (&((*img)->Im[3]))); 
+    }
+
+    return false;
+}
+void Simplifie (image* img){
+    bool monExiste = true;
+
+    while (monExiste){
+        monExiste = ElimineMono1Gen(img);
+    }
+}
+
+
+/*************************************************/
+/*                                               */
+/*           IntersectionVide                    */
+/*                                               */
+/*************************************************/
+
+bool IntersectionVide (image i1, image i2){
+    if(i1 == NULL && i2 == NULL){
+        return false;
+    }
+
+    if((i1 != NULL && i1->blanc) || (i2 != NULL && i2->blanc)){
+        return true;
+    }
+
+    return (IntersectionVide(i1->Im[0],i2->Im[0]) &&
+            IntersectionVide(i1->Im[1],i2->Im[1]) &&
+            IntersectionVide(i1->Im[2],i2->Im[2]) &&
+            IntersectionVide(i1->Im[3],i2->Im[3]));
+}
+/*************************************************/
+/*                                               */
+/*           CompteSousArbres                    */
+/*                                               */
+/*************************************************/
+/*
+- teste si les deux arbre sont égaux sémantiquement (et pas qu'en mémoire)
+- Une manière plus optimisée serait peut etre que c'est un noeud internes regarder si les quatre feilles sont de même 
+nature avant de partir récursivement ?
+*/
+bool ArbresEgaux (image i1, image i2){
+
+    if((i1 == NULL && i2 == NULL) ||
+        ((i1 != NULL && i1->blanc) &&  (i2 != NULL && i2->blanc))){
+            
+            return true;
+    }
+
+    if((i1 != NULL && !i1->blanc) &&  (i2 != NULL && !i2->blanc)){
+        return ArbresEgaux(i1->Im[0], i2->Im[0]) &&
+                ArbresEgaux(i1->Im[1], i2->Im[1]) &&
+                ArbresEgaux(i1->Im[2], i2->Im[2]) &&
+                ArbresEgaux(i1->Im[3], i2->Im[3]);
+    }
+
+    return false;
+}
+
+void _CompteSousArbres (image i1, image i2, int* cpt){
+    // si i1 est exactement i2 alors pas besoin de chercher dans les sous arbres
+    if(ArbresEgaux(i1,i2)){
+        (*cpt)++;
+        return;
+    }
+    if(i2 != NULL && !i2->blanc){
+        _CompteSousArbres(i1,i2->Im[0],cpt);
+        _CompteSousArbres(i1,i2->Im[1],cpt);
+        _CompteSousArbres(i1,i2->Im[2],cpt);
+        _CompteSousArbres(i1,i2->Im[3],cpt);
+    }
+        
+    
+
+
+}
+
+int CompteSousArbres (image i1, image i2){
+    int cpt = 0;
+    _CompteSousArbres(i1,i2,&cpt);
+    return cpt;
+}
+
+/*************************************************/
+/*                                               */
+/*           12- PrintPix                        */
+/*                                               */
+/*************************************************/
+
+/*
+*/
+void PrintPix(image img, int k){
+
+}
 
 void main() {
-    image img = LireI();
-    FreeImage(img);
-    printf("nb malloc restant %d \n",nb_malloc);
-   
+    image img1 = LireI();
+    image img2 = LireI();
+    printf("On est passe au teste \n");
+    printf ("inter vide : %d \n", IntersectionVide(img1,img2));
+
 }
