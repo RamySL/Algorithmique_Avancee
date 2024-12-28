@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 
 /***
@@ -558,14 +559,93 @@ int CompteSousArbres (image i1, image i2){
 
 /*
 */
+/*
+- Calcule a puissance n
+*/
+int PowExp(int a, int n){
+    if (n==0){
+        return 1;
+    }
+
+    if(n%2 == 0){
+        return PowExp(a*a,n/2);
+    }
+
+    return a*PowExp(a*a,(n-1)/2);
+}
+
+/*
+*/
+
+void rempliePixels (image img, char** mat, int col_debut,int lig_debut, int cote_carre){
+    char c = '#';
+    int lig_fin = lig_debut + cote_carre;
+    int col_fin = col_debut + cote_carre;
+
+    if(img == NULL){
+        c = '8';
+    }else if(img->blanc){
+        c = '.';
+    }else if(cote_carre == 1){
+        c = '-';
+    }else{
+        cote_carre = cote_carre / 2;
+        rempliePixels(img->Im[0], mat, col_debut, lig_debut, cote_carre);
+        rempliePixels(img->Im[1], mat, col_debut+cote_carre, lig_debut, cote_carre);
+        rempliePixels(img->Im[2], mat, col_debut, lig_debut+cote_carre, cote_carre);
+        rempliePixels(img->Im[3], mat, col_debut+cote_carre, lig_debut+cote_carre, cote_carre);
+    }
+
+    if(c != '#'){
+        //printf("rentrer pour remplire la mtrice de lig : %d - %d et col : %d - %d avec : %c \n",lig_debut,lig_fin,col_debut,col_fin,c );
+        for (int i = lig_debut; i < lig_fin; i++){
+            for (int j = col_debut; j < col_fin; j++){
+                mat[i][j] = c;
+            }
+        }
+    }
+
+
+
+}
+/*
+- On contruit une matrice carrée de dimension 2^k qu'on remplit avec la fonction ci dessus avec le charactere 
+approprié.
+*/
 void PrintPix(image img, int k){
+    int dim = PowExp(2,k);
+    
+    char** mat = (char**)malloc(dim * sizeof(char*));
+    for (int i = 0; i < dim; i++) {
+        mat[i] = (char*)malloc(dim * sizeof(char));
+    }
+
+    rempliePixels(img, mat, 0, 0, dim);
+
+    for (int i = 0; i < dim; i++){
+        for (int j = 0; j < dim; j++){
+            printf("%c",mat[i][j]);
+        }
+        printf("\n");
+    }
+
+    for (int i = 0; i < dim; i++) {
+        free(mat[i]);
+    }
+    free(mat);
+
+
 
 }
 
 void main() {
     image img1 = LireI();
-    image img2 = LireI();
+    //image img2 = LireI();
     printf("On est passe au teste \n");
-    printf ("inter vide : %d \n", IntersectionVide(img1,img2));
+    PrintI(img1);
+    printf("\n");
+    PrintPix(img1,3);
+
+    
 
 }
