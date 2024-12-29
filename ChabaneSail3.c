@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-
 
 /***
     Binome : Chabane Oualid, Sail Ramy
@@ -10,8 +8,11 @@
     oualid.chabane@universite-paris-saclay.fr
 ***/
 
-// 2) Implementation avec les listes chainés
-// pile
+/*
+- Une implémentation de la structure de pile dont on aura besoin avec les liste chainées
+- Dans notre utilisation de la pile, on stock dedans des pointeurs vers des strcutures deja alloués dans le tas
+  donc pas besoin d'allouer de la mémoire pour le pointeur val du maillon quand on empile
+*/
 
 typedef struct maillon {
     void* val;
@@ -21,8 +22,7 @@ typedef struct maillon {
 typedef struct maillon* pile;
 
 /*
-     Dans notre utilisation de la pile, on stock dedans des pointeurs vers des strcutures deja alloués dans le tas
-     donc pas besoin d'allouer de la mémoire pour le pointeur val du maillon
+
 */
 void empiler(void* val, pile* Pile) {
 
@@ -76,7 +76,7 @@ void affiche_pile(pile Pile) {
 
 /*************************************************/
 /*                                               */
-/*            Définition de types                */
+/*         Définition de type d'image            */
 /*                                               */
 /*************************************************/
 
@@ -89,21 +89,9 @@ typedef struct bloc_image{
 
 typedef bloc_image *image ;
 
-/*
-Mode simple explication : 
-    le + :
-        - Entre ascendant, descendant :  
-            - est utilisé pour descendre en profondeur dans l'arbre, pas besoin d'un + pour acceder au feuilles (qui sont des blancs)
-        - Entre freres : 
-            - si le frere est un noeud interne il faut un +, sinon pas besoin
-    Par exemple un arbre dont la racine possede que des pointeurs dans le tableau, dans la représentation on aura un ++ 
-
-*/
-
-
 /*************************************************/
 /*                                               */
-/*                     1                         */
+/*            1- Bc(), Nr(), Qt()                */
 /*                                               */
 /*************************************************/
 int nb_malloc = 0;
@@ -137,7 +125,7 @@ image Qt(image i0,image i1,image i2,image i3){
 
 /*************************************************/
 /*                                               */
-/*             Affichage                         */
+/*             2- PrintI                         */
 /*                                               */
 /*************************************************/
 
@@ -155,6 +143,11 @@ void PrintI(image img) {
     }
 }
 
+/*************************************************/
+/*                                               */
+/*             3- PrintPf                        */
+/*                                               */
+/*************************************************/
 void _PrintPf (image img, int porfondeur){
     if(img == NULL){
         printf("N");
@@ -179,118 +172,95 @@ void PrintPf(image img){
 
 /*************************************************/
 /*                                               */
-/*             Lecture                           */
+/*             4- LireI                          */
 /*                                               */
 /*************************************************/
 
 /*
-- On utilise deux pile : une pile pour compter le nombre de composante construite pour le constructeur + courant
-- une pile pour stocker les images
+Principe Utilisé : 
+
+- On utilise deux pile : une pile pour compter le nombre de composante (images) saisie pour le constructeur + courant
+    - une pile accumuler les images saisies (à chaque image saisie le compteur de tête de pile est incrémenté)
 
 - quand on a un + qui est saisie on empile un 0 dans la pile des compteur
-- quand un compteur atteint 4 on le dépile et on icrémente le nouveau sommet  et on dépile 
-    4 élément de la pile des images et on empile l'image qu'ils forment avec Qt
-
+- quand un compteur atteint 4 on le dépile et on dépile 4 images de la pile des images et on empile l'image qu'ils forment avec Qt
+(On incrémente aussi le compteur suivant de la pile si il existe)
 */
 
-/**
- * 
- * !!!!! Oublie pas de liberer les piles !!!!!
- */
+/*
+- Préconditions : 4 images min dans la pile d'images et pile_compteur non vide
+- Rassemble 4 sous images saisie après un + dans une seule avec la fonction Qt()
+- Modifie la pile de compteur de manière approrié (dépilement, incrémentation de nombre de composante 
+d'ancien constrcuteurs +
+*/
+void mergeSousArbres (pile* pile_compteur, pile* pile_images){
+    // on vient de former une quadtree
+    image i0,i1,i2,i3;
+    i3 = depiler(pile_images);
+    i2 = depiler(pile_images);
+    i1 = depiler(pile_images);
+    i0 = depiler(pile_images);
+    image qt = Qt(i0,i1,i2,i3);
+    empiler(qt,pile_images);
+
+    // on depile le compteur avec lequel on a terminé
+    int* cpt; 
+    depiler(pile_compteur); // on a enlevé le 4
+    if(*pile_compteur != NULL){
+        // on incrémente le compteur (du constructeur ascendant) après dépilement
+        cpt = (int*)peek(*pile_compteur);
+        (*cpt)++;
+        if((*cpt) == 4){
+            mergeSousArbres(pile_compteur,pile_images);
+        }
+    }        
+}
+
+/*
+- Précondition : Entrée valide, avec ou sans parenthèse
+- Rq : en supposant la précondition les malloc fait pour les entiers vont tous être libérer
+à la fin de l'execution de la fonction avec les dépilement de la fonction auxiliaire
+*/
 image LireI () {
     pile pile_compteur = NULL;
     pile pile_images = NULL;
 
-    int c;
+    char c;
     printf("Entrez l'image en mode simple (soummetez avec la touche entrer):\n");
 
     while ((c = getchar()) != '\n' && (c!= EOF)) {
 
-        if(c == '+' || c == 'b' || c == 'N'){
-            int top_cpt; 
-            // on vient de former une quadtree
-            while(pile_compteur != NULL && (top_cpt = *((int*) peek(pile_compteur))) == 4){
-                image i0,i1,i2,i3;
-                i3 = depiler(&pile_images);
-                i2 = depiler(&pile_images);
-                i1 = depiler(&pile_images);
-                i0 = depiler(&pile_images);
-                image qt = Qt(i0,i1,i2,i3);
-                empiler(qt,&pile_images);
-
-                // on depile le compteur avec lequel on a terminé
-                // on incrémente le compteur suivant après dépilement
-                int* cpt; 
-                depiler(&pile_compteur); // on a enlevé le 4
-                cpt = (int*)depiler(&pile_compteur);
-                (*cpt)++;
-                empiler(cpt,&pile_compteur);
-                top_cpt = *cpt;
-            }
-
-            if(c == '+'){
-                int* cpt = (int*) malloc(sizeof(int));
-                *cpt=0;
-                empiler(cpt,&pile_compteur);
-            }else {
-                // ici on est sur le cas ou l'image est soit completement en blanc soit en noir, pas sub division en 4
-                if (pile_compteur == NULL){
-                    if (c == 'N'){
-                        return Nr();
-                    }else if(c == 'b'){
-                        return Bc();
-                    }
-                }
-                if(c=='N'){
-                    image img = Nr();
-                    empiler(img,&pile_images);
-                }else{
-                    image img = Bc();
-                    empiler(img,&pile_images);
-                }
-                // un peek et une modif avec le pointeur au lieu de free puis malloc
-                int* cpt = (int*)depiler(&pile_compteur);
-                (*cpt)++;
-                empiler(cpt,&pile_compteur);
-            }
-        }
-    }
-    int top_cpt;
-    top_cpt = *((int*) peek(pile_compteur));
-            // on vient de former une quadtree
-    while(top_cpt == 4 ){
-        image i0,i1,i2,i3;
-        i3 = depiler(&pile_images);
-        i2 = depiler(&pile_images);
-        i1 = depiler(&pile_images);
-        i0 = depiler(&pile_images);
-        image qt = Qt(i0,i1,i2,i3);
-        empiler(qt,&pile_images);
-        // on depile le compteur avec lequel on a terminé
-        // on incrémente le compteur suivant après dépilement
-        int* cpt; 
-        depiler(&pile_compteur); // on a enlevé le 4
-        if (pile_compteur != NULL){
-            cpt = (int*) depiler(&pile_compteur);
-            (*cpt)++;
+        if(c == '+'){
+            int* cpt = (int*) malloc(sizeof(int));
+            *cpt=0;
             empiler(cpt,&pile_compteur);
-            top_cpt = *cpt;
-        }else{
-            return depiler(&pile_images);
-            
+        }else if (c=='N' || c == 'b') {
+
+            if(c=='N'){
+                image img = Nr();
+                empiler(img,&pile_images);
+            }else{
+                image img = Bc();
+                empiler(img,&pile_images);
+            }
+
+            if(pile_compteur != NULL){                    
+                int* cpt = (int*)peek(pile_compteur);
+                (*cpt)++;
+                if((*cpt) == 4){
+                    mergeSousArbres(&pile_compteur, &pile_images);
+                }
+            }
         }
     }
-  
-    printf ("Saisie Invalide \n");
-    return NULL;
     
-
+    return depiler(&pile_images);
 }
 
 
 /*************************************************/
 /*                                               */
-/*             5                                 */
+/*             5- Noire, Bla                     */
 /*                                               */
 /*************************************************/
 
@@ -321,7 +291,7 @@ bool Blanc(image img){
 
 /*************************************************/
 /*                                               */
-/*             Damier                            */
+/*             6- Damier                         */
 /*                                               */
 /*************************************************/
 
@@ -342,7 +312,7 @@ image Damier(int p){
 
 /*************************************************/
 /*                                               */
-/*            DemiTour                           */
+/*            7- DemiTour                        */
 /*                                               */
 /*************************************************/
 
@@ -361,7 +331,7 @@ image DemiTour(image img){
 
 /*************************************************/
 /*                                               */
-/*            8                                  */
+/*            8- FreeImag                        */
 /*                                               */
 /*************************************************/
 
@@ -384,12 +354,12 @@ void collect_ptrs (image img, pile* Pile){
         }
     }
 }
+
 /*
 - On fait deux passes pour libérer les blocs, une passe pour collecter les pointeurs dans
 une pile
 - Une autre passe pour le parcours de la pile et la libération des blocs en commençant par les feuilles
 */
-
 void FreeImage(image img){
     pile Pile = NULL;
     collect_ptrs(img,&Pile);
@@ -405,17 +375,17 @@ void FreeImage(image img){
 
 /*************************************************/
 /*                                               */
-/*           Simplifie                           */
+/*           9-Simplifie                         */
 /*                                               */
 /*************************************************/
 
 /*
     Précondition : profondeur min 1
-    - la fonction regarde qu'a la profondeur sur laquelle l'argument est
-    - si l'image contient que des feuilles blanches renvoie 1, si que
-    des feuilles noires renvoie 0, si pas monochrome renvoie -1
+    - la fonction regarde qu'a la profondeur sur laquelle l'argument est (pas plus loin)
+    - si l'image contient que des feuilles blanches renvoie b, si que
+    des feuilles noires renvoie N, si pas monochrome renvoie -
 */
-int estMono(image img){
+char estMono(image img){
     int countB = 0;
     int countN = 0;
     int i = 0;
@@ -431,27 +401,27 @@ int estMono(image img){
         i++;
     }
     if(countN == 4){
-        return 0;
+        return 'N';
     }
 
     if(countB == 4){
-        return 1;
+        return 'b';
     }
-    return -1;
+    return '-';
 }
 /*
 - elimine les premiers monochromes trouvés qui sont sur la même profondeur, élimine 4 monochrome 
-maximum en un seul appel, et 1 au min si il existe
+maximum en un seul appel, et 1 au min si il existe (si il ya un seul monochrome à cette profondeur)
 - renvoie vrai dans le cas où il y'avait un monochrome faux sinon
 */
 bool ElimineMono1Gen(image* img){
 
     if(*img != NULL && !(*img)->blanc){
         int mono = estMono(*img);
-        if(mono != -1){
+        if(mono != '-'){
             FreeImage(*img);
             //remplacement de +bbbb par b
-            if(mono == 1){
+            if(mono == 'b'){
                 *img = Bc();
             }
             // remplacement de +NNNN par N
@@ -481,7 +451,7 @@ void Simplifie (image* img){
 
 /*************************************************/
 /*                                               */
-/*           IntersectionVide                    */
+/*           10- IntersectionVide                */
 /*                                               */
 /*************************************************/
 
@@ -501,9 +471,10 @@ bool IntersectionVide (image i1, image i2){
 }
 /*************************************************/
 /*                                               */
-/*           CompteSousArbres                    */
+/*           11- CompteSousArbres                */
 /*                                               */
 /*************************************************/
+
 /*
 - teste si les deux arbre sont égaux sémantiquement (et pas qu'en mémoire)
 - Une manière plus optimisée serait peut etre que c'est un noeud internes regarder si les quatre feilles sont de même 
@@ -557,25 +528,22 @@ int CompteSousArbres (image i1, image i2){
 /*                                               */
 /*************************************************/
 
-/*
-*/
+
+int PowExpTerm(int a, int n, int acc) {
+    if (n == 0) {
+        return acc; 
+    }
+    if (n % 2 == 0) {
+        return PowExpTerm(a * a, n / 2, acc);
+    }
+    return PowExpTerm(a, n - 1, acc * a);
+}
 /*
 - Calcule a puissance n
 */
-int PowExp(int a, int n){
-    if (n==0){
-        return 1;
-    }
-
-    if(n%2 == 0){
-        return PowExp(a*a,n/2);
-    }
-
-    return a*PowExp(a*a,(n-1)/2);
+int PowExp(int a, int n) {
+    return PowExpTerm(a, n, 1);
 }
-
-/*
-*/
 
 void rempliePixels (image img, char** mat, int col_debut,int lig_debut, int cote_carre){
     char c = '#';
@@ -633,19 +601,9 @@ void PrintPix(image img, int k){
         free(mat[i]);
     }
     free(mat);
-
-
-
 }
 
 void main() {
     image img1 = LireI();
-    //image img2 = LireI();
-    printf("On est passe au teste \n");
     PrintI(img1);
-    printf("\n");
-    PrintPix(img1,3);
-
-    
-
 }
