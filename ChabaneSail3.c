@@ -21,9 +21,6 @@ typedef struct maillon {
 
 typedef struct maillon* pile;
 
-/*
-
-*/
 void empiler(void* val, pile* Pile) {
 
     Block* head = (Block*) malloc(sizeof(Block));
@@ -72,6 +69,89 @@ void affiche_pile(pile Pile) {
     }
 
     printf("End of pile\n");
+}
+
+/***
+    Structure de File, utilisé dans la question 13
+***/
+
+typedef struct {
+    Block* tete;  // Premier élément de la file
+    Block* queue; // Dernier élément de la file
+} fileB;
+
+typedef fileB* file;
+
+// Fonction pour initialiser la file
+void initialiser_file(file File) {
+    File->tete = NULL;
+    File->queue = NULL;
+}
+
+// Ajouter un élément à la file (enqueue)
+void enfiler(void* val, file File) {
+    Block* nouveau = (Block*)malloc(sizeof(Block));
+    if (!nouveau) {
+        printf("Erreur : Échec de l'allocation mémoire\n");
+        return;
+    }
+
+    nouveau->val = val;
+    nouveau->next = NULL;
+
+    if (File->queue == NULL) { // Si la file est vide
+        File->tete = nouveau;
+        File->queue = nouveau;
+    } else { // Ajouter à la fin
+        File->queue->next = nouveau;
+        File->queue = nouveau;
+    }
+}
+
+// Retirer un élément de la file (dequeue)
+void* defiler(file File) {
+    if (File->tete == NULL) { // Si la file est vide
+        printf("Défilement : File vide\n");
+        return NULL;
+    }
+
+    Block* premier = File->tete;
+    void* valeur = premier->val;
+
+    File->tete = premier->next;
+    if (File->tete == NULL) { // Si la file est maintenant vide
+        File->queue = NULL;
+    }
+
+    free(premier);
+    return valeur;
+}
+
+// Consulter le premier élément de la file (peek)
+void* consulter(file File) {
+    if (File->tete == NULL) {
+        printf("Consulter : File vide\n");
+        return NULL;
+    }
+    return File->tete->val;
+}
+
+// Afficher le contenu de la file
+void afficher_file(file File) {
+    if (File->tete == NULL) {
+        printf("File vide\n");
+        return;
+    }
+
+    printf("Contenu de la file :\n");
+
+    Block* actuel = File->tete;
+    while (actuel != NULL) {
+        printf("- %p\n", actuel->val);
+        actuel = actuel->next;
+    }
+
+    printf("Fin de la file\n");
 }
 
 /*************************************************/
@@ -490,15 +570,16 @@ bool ArbresEgaux (image i1, image i2){
 void _CompteSousArbres (image i1, image i2, int* cpt, int *h, int hi1){
     if(i2 != NULL && !i2->blanc)
     {
-        int* h0=(int*) malloc(sizeof(int)), h1=(int*) malloc(sizeof(int));
-        _CompteSousArbres(i1,i2->Im[0],cpt, h0);
-        _CompteSousArbres(i1,i2->Im[1],cpt, h1);
+        int* h0=(int*) malloc(sizeof(int));
+        int* h1=(int*) malloc(sizeof(int));
+        _CompteSousArbres(i1,i2->Im[0],cpt, h0, hi1);
+        _CompteSousArbres(i1,i2->Im[1],cpt, h1, hi1);
         if(*h0 < *h1) *h0 = *h1;
 
-        _CompteSousArbres(i1,i2->Im[2],cpt, h1);
+        _CompteSousArbres(i1,i2->Im[2],cpt, h1, hi1);
         if(*h0 < *h1) *h0 = *h1;
 
-        _CompteSousArbres(i1,i2->Im[3],cpt, h1);
+        _CompteSousArbres(i1,i2->Im[3],cpt, h1, hi1);
         if(*h0 < *h1) *h0 = *h1;
         *h = *h0 + 1;
 
@@ -516,14 +597,14 @@ void _CompteSousArbres (image i1, image i2, int* cpt, int *h, int hi1){
 int hauteur(image img){
     if(img == NULL || img->blanc) return 0;
     else {
-        int h1 = hauteur(img.Im[0]);
-        int h2 = hauteur(img.Im[1]);
+        int h1 = hauteur(img->Im[0]);
+        int h2 = hauteur(img->Im[1]);
         if(h1 < h2) h1 = h2;
 
-        h2 = hauteur(img.Im[2]);
+        h2 = hauteur(img->Im[2]);
         if(h1 < h2) h1 = h2;
 
-        h2 = hauteur(img.Im[3]);
+        h2 = hauteur(img->Im[3]);
         if(h1 < h2) h1 = h2;
         return h1 + 1;
     }
@@ -617,7 +698,45 @@ void PrintPix(image img, int k){
     free(mat);
 }
 
+/*************************************************/
+/*                                               */
+/*           13- Alea                            */
+/*                                               */
+/*************************************************/
+
+
+int power(int a, int n){
+    if(n==0) return 1;
+    else
+        if(n % 2 == 1) return a * power(a * a, n/2);
+        else return power(a * a, n/2);
+}
+
+image Alea(int k, int n){
+    int p = power(2, k);
+    file f;
+    initialiser_file(f);
+
+    int i=0;
+    while(n < p){
+        int color = rand()%2;
+        image img;
+        if(color % 2 == 0){
+          img = Bc();
+          n--;
+        } else img = Nr();
+        enfiler(img, f);
+        p--;
+    }
+
+    while(n>0) enfiler(Bc(), f);
+
+    while(f->tete!=NULL || f->queue!=NULL){
+        enfiler(Qt(defiler(f), defiler(f), defiler(f), defiler(f)), f);
+    }
+}
+
 void main() {
-    image img1 = LireI();
-    PrintI(img1);
+    //image img1 = LireI();
+    //PrintI(img1);
 }
