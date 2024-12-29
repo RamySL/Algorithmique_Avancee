@@ -67,7 +67,7 @@ void affiche_pile(pile Pile) {
 
     Block* current = Pile;
     while (current != NULL) {
-        printf("- %p \n",(current->val)); 
+        printf("- %p \n",(current->val));
         current = current->next;
     }
 
@@ -167,7 +167,7 @@ void _PrintPf (image img, int porfondeur){
 
 void PrintPf(image img){
     _PrintPf(img,0);
-    printf("\n");   
+    printf("\n");
 }
 
 /*************************************************/
@@ -177,7 +177,7 @@ void PrintPf(image img){
 /*************************************************/
 
 /*
-Principe Utilisé : 
+Principe Utilisé :
 
 - On utilise deux pile : une pile pour compter le nombre de composante (images) saisie pour le constructeur + courant
     - une pile accumuler les images saisies (à chaque image saisie le compteur de tête de pile est incrémenté)
@@ -190,7 +190,7 @@ Principe Utilisé :
 /*
 - Préconditions : 4 images min dans la pile d'images et pile_compteur non vide
 - Rassemble 4 sous images saisie après un + dans une seule avec la fonction Qt()
-- Modifie la pile de compteur de manière approrié (dépilement, incrémentation de nombre de composante 
+- Modifie la pile de compteur de manière approrié (dépilement, incrémentation de nombre de composante
 d'ancien constrcuteurs +
 */
 void mergeSousArbres (pile* pile_compteur, pile* pile_images){
@@ -204,7 +204,7 @@ void mergeSousArbres (pile* pile_compteur, pile* pile_images){
     empiler(qt,pile_images);
 
     // on depile le compteur avec lequel on a terminé
-    int* cpt; 
+    int* cpt;
     depiler(pile_compteur); // on a enlevé le 4
     if(*pile_compteur != NULL){
         // on incrémente le compteur (du constructeur ascendant) après dépilement
@@ -213,7 +213,7 @@ void mergeSousArbres (pile* pile_compteur, pile* pile_images){
         if((*cpt) == 4){
             mergeSousArbres(pile_compteur,pile_images);
         }
-    }        
+    }
 }
 
 /*
@@ -244,7 +244,7 @@ image LireI () {
                 empiler(img,&pile_images);
             }
 
-            if(pile_compteur != NULL){                    
+            if(pile_compteur != NULL){
                 int* cpt = (int*)peek(pile_compteur);
                 (*cpt)++;
                 if((*cpt) == 4){
@@ -253,7 +253,7 @@ image LireI () {
             }
         }
     }
-    
+
     return depiler(&pile_images);
 }
 
@@ -307,7 +307,7 @@ image Damier(int p){
         return Nr();
     }
     return _Damier(p);
-    
+
 }
 
 /*************************************************/
@@ -336,7 +336,7 @@ image DemiTour(image img){
 /*************************************************/
 
 /*
-- Il faut supprimer en remontant les appels 
+- Il faut supprimer en remontant les appels
 - Donc on fait une version itérative pour éviter les débordement de piles
 */
 
@@ -386,68 +386,57 @@ void FreeImage(image img){
     des feuilles noires renvoie N, si pas monochrome renvoie -
 */
 char estMono(image img){
-    int countB = 0;
-    int countN = 0;
+
+    bool blanc = true;
+    bool noir = true;
+
     int i = 0;
-    
-    while (i<4){
-        if(img->Im[i] == NULL){
-            countN ++;
-        }else{
-            if(img->Im[i]->blanc){
-                countB ++;
-            }
+    while (blanc || noir){
+        if(blanc && img->Im[i] == NULL){
+            // cas d'une sous-image noire, on met blanc à false
+            blanc = false;
+        }
+        else if(noir && img->Im[i]->blanc){
+             // cas d'une sous-image blanc, on met noir à false
+                noir = false;
+        }
+        else {
+            //cas d'une sous image composée, on s'arrete, car l'image n'est pas monochrome
+            noir = false;
+            blanc = false;
         }
         i++;
     }
-    if(countN == 4){
+    if(noir){
         return 'N';
     }
 
-    if(countB == 4){
+    if(blanc){
         return 'b';
     }
+
     return '-';
 }
-/*
-- elimine les premiers monochromes trouvés qui sont sur la même profondeur, élimine 4 monochrome 
-maximum en un seul appel, et 1 au min si il existe (si il ya un seul monochrome à cette profondeur)
-- renvoie vrai dans le cas où il y'avait un monochrome faux sinon
-*/
-bool ElimineMono1Gen(image* img){
 
+void Simplifie(image* img){
     if(*img != NULL && !(*img)->blanc){
+        Simplifie(&((*img)->Im[0]));
+        Simplifie(&((*img)->Im[1]));
+        Simplifie(&((*img)->Im[2]));
+        Simplifie(&((*img)->Im[3]));
+
         int mono = estMono(*img);
-        if(mono != '-'){
+
+        if(mono == 'b'){
             FreeImage(*img);
-            //remplacement de +bbbb par b
-            if(mono == 'b'){
-                *img = Bc();
-            }
-            // remplacement de +NNNN par N
-            else{
-                *img = NULL;
-            }
-
-            return true;
+            *img = Bc();
         }
-
-        return (ElimineMono1Gen (&((*img)->Im[0])) ||
-                ElimineMono1Gen (&((*img)->Im[1])) ||
-                ElimineMono1Gen (&((*img)->Im[2])) ||
-                ElimineMono1Gen (&((*img)->Im[3]))); 
-    }
-
-    return false;
-}
-void Simplifie (image* img){
-    bool monExiste = true;
-
-    while (monExiste){
-        monExiste = ElimineMono1Gen(img);
+        else if(mono == 'N'){
+            FreeImage(*img);
+            *img = NULL;
+        }
     }
 }
-
 
 /*************************************************/
 /*                                               */
@@ -477,14 +466,14 @@ bool IntersectionVide (image i1, image i2){
 
 /*
 - teste si les deux arbre sont égaux sémantiquement (et pas qu'en mémoire)
-- Une manière plus optimisée serait peut etre que c'est un noeud internes regarder si les quatre feilles sont de même 
+- Une manière plus optimisée serait peut etre que c'est un noeud internes regarder si les quatre feilles sont de même
 nature avant de partir récursivement ?
 */
 bool ArbresEgaux (image i1, image i2){
 
     if((i1 == NULL && i2 == NULL) ||
         ((i1 != NULL && i1->blanc) &&  (i2 != NULL && i2->blanc))){
-            
+
             return true;
     }
 
@@ -498,27 +487,52 @@ bool ArbresEgaux (image i1, image i2){
     return false;
 }
 
-void _CompteSousArbres (image i1, image i2, int* cpt){
-    // si i1 est exactement i2 alors pas besoin de chercher dans les sous arbres
-    if(ArbresEgaux(i1,i2)){
+void _CompteSousArbres (image i1, image i2, int* cpt, int *h, int hi1){
+    if(i2 != NULL && !i2->blanc)
+    {
+        int* h0=(int*) malloc(sizeof(int)), h1=(int*) malloc(sizeof(int));
+        _CompteSousArbres(i1,i2->Im[0],cpt, h0);
+        _CompteSousArbres(i1,i2->Im[1],cpt, h1);
+        if(*h0 < *h1) *h0 = *h1;
+
+        _CompteSousArbres(i1,i2->Im[2],cpt, h1);
+        if(*h0 < *h1) *h0 = *h1;
+
+        _CompteSousArbres(i1,i2->Im[3],cpt, h1);
+        if(*h0 < *h1) *h0 = *h1;
+        *h = *h0 + 1;
+
+        free(h0);
+        free(h1);
+    }
+    else *h=0;
+
+
+    if(*h == hi1 && ArbresEgaux(i1,i2)){
         (*cpt)++;
-        return;
     }
-    if(i2 != NULL && !i2->blanc){
-        _CompteSousArbres(i1,i2->Im[0],cpt);
-        _CompteSousArbres(i1,i2->Im[1],cpt);
-        _CompteSousArbres(i1,i2->Im[2],cpt);
-        _CompteSousArbres(i1,i2->Im[3],cpt);
+}
+
+int hauteur(image img){
+    if(img == NULL || img->blanc) return 0;
+    else {
+        int h1 = hauteur(img.Im[0]);
+        int h2 = hauteur(img.Im[1]);
+        if(h1 < h2) h1 = h2;
+
+        h2 = hauteur(img.Im[2]);
+        if(h1 < h2) h1 = h2;
+
+        h2 = hauteur(img.Im[3]);
+        if(h1 < h2) h1 = h2;
+        return h1 + 1;
     }
-        
-    
-
-
 }
 
 int CompteSousArbres (image i1, image i2){
     int cpt = 0;
-    _CompteSousArbres(i1,i2,&cpt);
+    int *h = (int*) malloc(sizeof(int));
+    _CompteSousArbres(i1,i2,&cpt, h, hauteur(i1));
     return cpt;
 }
 
@@ -531,7 +545,7 @@ int CompteSousArbres (image i1, image i2){
 
 int PowExpTerm(int a, int n, int acc) {
     if (n == 0) {
-        return acc; 
+        return acc;
     }
     if (n % 2 == 0) {
         return PowExpTerm(a * a, n / 2, acc);
@@ -577,12 +591,12 @@ void rempliePixels (image img, char** mat, int col_debut,int lig_debut, int cote
 
 }
 /*
-- On contruit une matrice carrée de dimension 2^k qu'on remplit avec la fonction ci dessus avec le charactere 
+- On contruit une matrice carrée de dimension 2^k qu'on remplit avec la fonction ci dessus avec le charactere
 approprié.
 */
 void PrintPix(image img, int k){
     int dim = PowExp(2,k);
-    
+
     char** mat = (char**)malloc(dim * sizeof(char*));
     for (int i = 0; i < dim; i++) {
         mat[i] = (char*)malloc(dim * sizeof(char));
