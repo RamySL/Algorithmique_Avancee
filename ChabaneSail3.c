@@ -1070,27 +1070,31 @@ void main() {
     }
     //test de Alea
     if(true){
+        srand(time(NULL));
         printf("\n test de la fnction Alea \n\n");
-        printf("Alea(1,2) genere 10 fois \n");
+
+        printf("Alea(0,0) : ");
+        img = Alea(0,0);
+        PrintI(img);
+        FreeImage(img);
+
+        printf("Alea(0,1) : ");
+        img = Alea(0,1);
+        PrintI(img);
+        FreeImage(img);
+
+        printf("Alea(10,1000) : \n");
+        img = Alea(10,1000);
+        PrintPix(img,6);
+        FreeImage(img);
+
+        printf("Alea(1,2)  10 fois \n");
         for(int i=0; i<10; i++){
             img = Alea(1,2);
             PrintI(img);
             FreeImage(img);
         }
-        
-        
-
-        /*img = Alea(0,1);
-        img = Alea(0,0);
-        img = Alea(100,1);
-        img = Alea(10,1000);
-        img = Alea(2,2);*/
-
 
     }
     
-    /*srand(time(NULL));
-    image img = Alea(5, 10);
-    PrintPix(img, 6);
-    FreeImage(img);*/
 }
