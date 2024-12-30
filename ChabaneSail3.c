@@ -10,6 +10,9 @@
     oualid.chabane@universite-paris-saclay.fr
 ***/
 
+typedef enum {false, true} bool;
+
+
 /*
 - Une implémentation de la structure de pile dont on aura besoin avec les liste chainées
 - Dans notre utilisation de la pile, on stock dedans des pointeurs vers des strcutures deja alloués dans le tas
@@ -91,7 +94,7 @@ void initialiser_file(file* File) {
     (*File)->queue = NULL;
 }
 
-int fileVide(file f){
+bool fileVide(file f){
     return f->tete==NULL && f->queue==NULL;
 }
 
@@ -175,8 +178,6 @@ void afficher_file(file File) {
 /*         Définition de type d'image            */
 /*                                               */
 /*************************************************/
-
-typedef enum {false, true} bool;
 
 typedef struct bloc_image{
      bool blanc ;
@@ -720,14 +721,6 @@ void PrintPix(image img, int k){
 /*                                               */
 /*************************************************/
 
-
-int power(int a, int n){
-    if(n==0) return 1;
-    else
-        if(n % 2 == 1) return a * power(a * a, n/2);
-        else return power(a * a, n/2);
-}
-
 void loi_uniforme(int tab[], int length, int nblancs){
     //genere un tableau de taille length avec nblancs échantillons blancs selon la loi uniforme
     for(int i=0; i<nblancs; i++){
@@ -843,7 +836,7 @@ void loi_gaussienne(int tab[], int length, int nblancs, int mu, int sigma){
 
 
 image Alea(int k, int n){
-    int p = 4 * power(2, k);
+    int p = 4 * PowExp(2, k);
     file f;
     initialiser_file(&f);
     int tab[p];
