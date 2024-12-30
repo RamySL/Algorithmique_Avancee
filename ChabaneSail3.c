@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /***
     Binome : Chabane Oualid, Sail Ramy
@@ -83,16 +84,23 @@ typedef struct {
 typedef fileB* file;
 
 // Fonction pour initialiser la file
-void initialiser_file(file File) {
-    File->tete = NULL;
-    File->queue = NULL;
+void initialiser_file(file* File) {
+    *File = (file) malloc(sizeof(fileB));
+    (*File)->tete = NULL;
+    (*File)->queue = NULL;
 }
+
+int fileVide(file f){
+    return f->tete==NULL && f->queue==NULL;
+}
+
 
 // Ajouter un élément à la file (enqueue)
 void enfiler(void* val, file File) {
-    Block* nouveau = (Block*)malloc(sizeof(Block));
+    Block* nouveau = (Block*) malloc(sizeof(Block));
+
     if (!nouveau) {
-        printf("Erreur : Échec de l'allocation mémoire\n");
+        printf("Erreur : Echec de l'allocation memoire\n");
         return;
     }
 
@@ -111,7 +119,7 @@ void enfiler(void* val, file File) {
 // Retirer un élément de la file (dequeue)
 void* defiler(file File) {
     if (File->tete == NULL) { // Si la file est vide
-        printf("Défilement : File vide\n");
+        printf("Defilement : File vide\n");
         return NULL;
     }
 
@@ -125,6 +133,13 @@ void* defiler(file File) {
 
     free(premier);
     return valeur;
+}
+
+void libererFile(file f) {
+    while(f->tete != NULL || f->queue != NULL){
+       void* e = defiler(f);
+    }
+    free(f);
 }
 
 // Consulter le premier élément de la file (peek)
@@ -167,7 +182,7 @@ typedef struct bloc_image{
     struct bloc_image * Im[4] ;
 }bloc_image ;
 
-typedef bloc_image *image ;
+typedef bloc_image* image ;
 
 /*************************************************/
 /*                                               */
@@ -712,31 +727,71 @@ int power(int a, int n){
         else return power(a * a, n/2);
 }
 
-image Alea(int k, int n){
-    int p = power(2, k);
-    file f;
-    initialiser_file(f);
-
-    int i=0;
-    while(n < p){
-        int color = rand()%2;
-        image img;
-        if(color % 2 == 0){
-          img = Bc();
-          n--;
-        } else img = Nr();
-        enfiler(img, f);
-        p--;
+void loi_uniforme(int tab[], int length, int nblancs){
+    //genere un tableau de taille length avec nblancs échantillons blancs selon la loi uniforme
+    for(int i=0; i<nblancs; i++){
+        tab[i]=0;
     }
-
-    while(n>0) enfiler(Bc(), f);
-
-    while(f->tete!=NULL || f->queue!=NULL){
-        enfiler(Qt(defiler(f), defiler(f), defiler(f), defiler(f)), f);
+    for(int i= nblancs; i<length; i++){
+        tab[i]=1;
+    }
+    for(int i=0; i<length; i++){
+        int tmp = rand()%length;
+        if(tab[tmp] != tab[i]){
+            int swap = tab[tmp];
+            tab[tmp] = tab[i];
+            tab[i] = swap;
+        }
     }
 }
 
+int random_gaussien_index(int length, int u, int sigma){
+
+}
+
+void loi_gaussienne_iid(int tab[], int length, int nblancs, int u, int sigma){
+    // loi normal iid en utilisant le TCL
+    for(int i=0; i<nblancs; i++){
+        tab[i]=0;
+    }
+    for(int i= nblancs; i<length; i++){
+        tab[i]=1;
+    }
+
+    for(int i=0; i<n; i++){
+        int tmp = random_gaussien_index(length, u, sigma);
+        if(tab[tmp] != tab[i]){
+            int swap = tab[tmp];
+            tab[tmp] = tab[i];
+            tab[i] = swap;
+        }
+    }
+}
+
+image Alea(int k, int n){
+    int p = 4 * power(2, k);
+    file f;
+    initialiser_file(&f);
+    int tab[p];
+    loi_uniforme(tab, p, n);
+    for(int i=0; i<p; i++){
+        if(tab[i]) enfiler(Nr(), f);
+        else enfiler(Bc(), f);
+    }
+
+    image racine;
+    while(!fileVide(f)){
+        racine = defiler(f);
+        if(!fileVide(f)) enfiler(Qt(racine, defiler(f), defiler(f), defiler(f)), f);
+    }
+
+    libererFile(f);
+    return racine;
+}
+
 void main() {
-    //image img1 = LireI();
-    //PrintI(img1);
+    srand(time(NULL));
+    image img = Alea(3, 2);
+    PrintPix(img, 5);
+    FreeImage(img);
 }
