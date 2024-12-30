@@ -195,7 +195,7 @@ int nb_malloc = 0;
 
 image Bc() {
     image img =  ((image) malloc (sizeof(struct bloc_image)));
-    printf("Allocation de la memoire avec l'adresse : %p \n",img);
+    //printf("Allocation de la memoire avec l'adresse : %p \n",img);
     nb_malloc++;
     img -> blanc = true;
     return img;
@@ -207,7 +207,7 @@ image Nr() {
 
 image Qt(image i0,image i1,image i2,image i3){
     image img =  ((image) malloc (sizeof(struct bloc_image)));
-    printf("Allocation de la memoire avec l'adresse : %p \n",img);
+    //printf("Allocation de la memoire avec l'adresse : %p \n",img);
     nb_malloc++;
     img -> blanc = false;
 
@@ -226,18 +226,23 @@ image Qt(image i0,image i1,image i2,image i3){
 /*                                               */
 /*************************************************/
 
-void PrintI(image img) {
+void _PrintI(image img) {
     if(img == NULL){
         printf("N");
     }else if(img->blanc){
         printf("b");
     }else{
         printf("+");
-        PrintI(img->Im[0]);
-        PrintI(img->Im[1]);
-        PrintI(img->Im[2]);
-        PrintI(img->Im[3]);
+        _PrintI(img->Im[0]);
+        _PrintI(img->Im[1]);
+        _PrintI(img->Im[2]);
+        _PrintI(img->Im[3]);
     }
+}
+
+void PrintI(image img){
+    _PrintI(img);
+    printf("\n");
 }
 
 /*************************************************/
@@ -370,7 +375,7 @@ bool Noir(image img){
         return false;
     }
 
-    return Noir(img->Im[0]) && Noir(img->Im[1]) && Noir(img->Im[2]) && Noir(img->Im[3]);
+    return (Noir(img->Im[0]) && Noir(img->Im[1]) && Noir(img->Im[2]) && Noir(img->Im[3]));
 }
 
 bool Blanc(image img){
@@ -382,7 +387,7 @@ bool Blanc(image img){
         return true;
     }
 
-    return Blanc(img->Im[0]) && Blanc(img->Im[1]) && Blanc(img->Im[2]) && Blanc(img->Im[3]);
+    return (Blanc(img->Im[0]) && Blanc(img->Im[1]) && Blanc(img->Im[2]) && Blanc(img->Im[3]));
 }
 
 
@@ -464,7 +469,7 @@ void FreeImage(image img){
     while (Pile != NULL){
         image i = depiler(&Pile);
         free(i);
-        printf("libeartion de la memoire : %p \n",i);
+        //printf("libeartion de la memoire : %p \n",i);
         nb_malloc--;
     }
 
@@ -489,6 +494,7 @@ char estMono(image img){
 
     int i = 0;
     while (blanc || noir){
+        printf("i = : %d \n ",i);
         if(blanc && img->Im[i] == NULL){
             // cas d'une sous-image noire, on met blanc à false
             blanc = false;
@@ -841,7 +847,7 @@ image Alea(int k, int n){
     //L'idée: on génére tout les fils à la profodeur k, dans une file, suiavnt la loi donnée (gaussienne ou uniforme)
     //      On itére sur la file tant qu'elle est pleine, on regroupe les elements par quatre, formant par cela des
     //      Noeuds Qt, vers la fin, on obtient un arbre dont les fils sont génére avec la loi donnée
-    int p = 4 * power(2, k);
+    int p = 4 * PowExp(2, k);
     file f;
     initialiser_file(&f);
     int tab[p];
@@ -867,8 +873,117 @@ image Alea(int k, int n){
 }
 
 void main() {
-    srand(time(NULL));
+    image img;
+    // test affichage PrintI, PrintPf
+    if(false){
+        printf("Teste de l'affichage simple : \n\n");
+    
+        img = Bc();
+        printf("Doit afficher b : "); PrintI(img);FreeImage(img);
+        img = Nr();
+        printf("Doit afficher N : "); PrintI(img);FreeImage(img);
+        img = Qt(Bc(), Nr(), Bc(), Nr());
+        printf("Doit afficher +bNbN : "); PrintI(img);FreeImage(img);
+        img = Qt(Qt(Bc(), Nr(), Bc(), Nr()), Nr(), Bc(), Nr());
+        printf("Doit afficher ++bNbNNbN : "); PrintI(img);FreeImage(img);
+
+        printf("Teste de l'affichage en profondeur : \n\n");
+
+        img = Bc();
+        printf("Doit afficher b0 : "); PrintPf(img);FreeImage(img);
+        img = Nr();
+        printf("Doit afficher N0 : "); PrintPf(img);FreeImage(img);
+        img = Qt(Bc(), Nr(), Bc(), Nr());
+        printf("Doit afficher +0b1N1b1N1 : "); PrintPf(img);FreeImage(img);
+        img = Qt(Qt(Bc(), Nr(), Bc(), Nr()), Nr(), Bc(), Nr());
+        printf("Doit afficher +0+1b2N2b2N2N1b1N1 : "); PrintPf(img);FreeImage(img);
+    }
+    // Lecture
+    if(false){
+
+        printf("\nTest de la fonction de lecture (Accepte que des entrees valides (vous pouvez utiliser les parentheses)) \n\n");
+        char c;
+        do{
+            img = LireI();
+            printf("Mode simple : \n");
+            PrintI(img);
+            printf("mode profondeur \n");
+            PrintPf(img);
+
+            FreeImage(img);
+
+            printf("q : quitter, entrer : continuer \n");
+            scanf("%c",&c);
+            
+        }while(c!='q');
+
+        
+    }
+    // teste de noire et blanc
+    if (false){
+        printf("\n entrez des images quelconque, noir, blanches, pour tester la fonction Noir() et Blanc() \n\n");
+        printf("Appuyer sur q pour quitter la boucle de saisie : \n");
+        char c;
+        do{
+            img = LireI();
+            bool bN = Noir(img);
+            bool bB = Blanc(img);
+            FreeImage(img);
+
+            if(bN && bB){
+                printf("Probleme avec les fonctions \n");
+            }else if(bN){
+                printf("image Noire \n");
+            }else if(bB){
+                printf("image blanche \n");
+            }else{
+                printf("image en noir et blanc \n");
+            }
+
+            printf("q : quitter, entrer : continuer \n");
+            scanf("%c",&c);
+            
+        }while(c!='q');
+    }
+    // On teste printPix et damier en même temps
+    if (false){
+        for (int i = 0; i<6; i++){
+            printf("Affichge de damier de profondeur %d avec PrintPix avec k = %d \n\n",i,i);
+            img = Damier(i);
+            PrintPix(img,i);
+            FreeImage(img);
+        }
+    }
+    // teste demitour
+    if(false){
+        printf("Test de Demitour : Avec : ++bNNb+bbbN+NNbbN, On doit avoir : +N+bbNN+Nbbb+bNNb, Essaye : \n\n");
+
+        img = LireI();
+        PrintI(DemiTour(img));
+
+        printf("\nUne image doit etre egale aux resultat si on lui applique deux fois demi Tour : \n");
+        printf("image == DemiTour(Demitour(image)) : %d (1 pour vrai) \n", ArbresEgaux(img, DemiTour(DemiTour(img))));
+        FreeImage(img);
+
+        printf("\nUn damier reste le meme apres un demi tour normalement : \n");
+
+        for (int i = 0; i<6; i++){
+            img = Damier(i);
+            printf("Damier == DemiTour(Damier) (profondeur %d) : %d \n",i, ArbresEgaux(img, DemiTour(img)));
+            FreeImage(img);
+        }
+    }
+    // FreeImage a deja été testé avec les print d'allocation et desallocation qui sont en commentaires
+
+    // teste de Simplifie
+    if (true){
+        printf("\n Test de Simplify \n\n");
+        img = Qt(Nr(),Nr(),Nr(),Nr());
+        Simplifie(&img);
+        printf("pour +NNNN on doit avoir N : "); PrintI(img);
+    }
+    /*srand(time(NULL));
     image img = Alea(5, 10);
     PrintPix(img, 6);
-    FreeImage(img);
+    FreeImage(img);*/
 }
