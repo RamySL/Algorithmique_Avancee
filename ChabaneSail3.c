@@ -827,7 +827,7 @@ void loi_gaussienne(int tab[], int length, int nblancs, int mu, int sigma){
     //Fonction suivante génére un tableau de nblancs images blanches suivant la distribution gausienne N(mu, sigma), avec mu, la position moyenne dans les feuilles de l'arbre et sigma l'écarte type
     for(int i=0; i<length; i++) tab[i]=1;
     for(int i=0; i<nblancs; i++){
-        int idx_gaussien = (int) (normInv((rand() + 1.0) / (RAND_MAX + 2.0), mu, sigma) * sigma + mu);
+        int idx_gaussien = (int) normInv((rand() + 1.0) / (RAND_MAX + 2.0), mu, sigma);
         if(!tab[idx_gaussien]){
             //trouve plus proche point noir
             int offset=1;
@@ -854,10 +854,10 @@ image Alea(int k, int n){
     int tab[p];
     //Il y a une possibilité de générer un échantillon gaussien en utilisant la fonction de répartition inverse de la loi normale
 
-    //loi_gaussienne(tab, p, n, 40, 2);
+    loi_gaussienne(tab, p, n, 100, 5);
     //                          |   |
     //                          mu sigma
-    loi_uniforme(tab, p, n);
+    //loi_uniforme(tab, p, n);
     for(int i=0; i<p; i++){
         if(tab[i]) enfiler(Nr(), f);
         else enfiler(Bc(), f);
