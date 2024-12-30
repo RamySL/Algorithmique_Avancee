@@ -746,9 +746,9 @@ void loi_uniforme(int tab[], int length, int nblancs){
     }
 }
 
-
-// Function to calculate the quantile function (inverse CDF) of a normal distribution
 double normInv(double p, double mu, double sigma) {
+    //Cette fonction est trouvé sur github: https://gist.github.com/kmpm/1211922/6b7fcd0155b23c3dc71e6f4969f2c48785371292
+    //Elle basée sur les principes de l'analyse numérique, c'est une approximation par tranche de la fonctio inverse de la ofnction de répartition gaussienne
     if (p <= 0.0 || p >= 1.0) {
         printf("The probability p must be between 0 and 1 (exclusive).\n");
         exit(1);
@@ -824,6 +824,7 @@ double normInv(double p, double mu, double sigma) {
 }
 
 void loi_gaussienne(int tab[], int length, int nblancs, int mu, int sigma){
+    //Fonction suivante génére un tableau de nblancs images blanches suivant la distribution gausienne N(mu, sigma), avec mu, la position moyenne dans les feuilles de l'arbre et sigma l'écarte type
     for(int i=0; i<length; i++) tab[i]=1;
     for(int i=0; i<nblancs; i++){
         int idx_gaussien = (int) (normInv((rand() + 1.0) / (RAND_MAX + 2.0), mu, sigma) * sigma + mu);
@@ -843,13 +844,20 @@ void loi_gaussienne(int tab[], int length, int nblancs, int mu, int sigma){
 
 
 image Alea(int k, int n){
+    //Fonction de la question 13
+    //L'idée: on génére tout les fils à la profodeur k, dans une file, suiavnt la loi donnée (gaussienne ou uniforme)
+    //      On itére sur la file tant qu'elle est pleine, on regroupe les elements par quatre, formant par cela des
+    //      Noeuds Qt, vers la fin, on obtient un arbre dont les fils sont génére avec la loi donnée
     int p = 4 * power(2, k);
     file f;
     initialiser_file(&f);
     int tab[p];
     //Il y a une possibilité de générer un échantillon gaussien en utilisant la fonction de répartition inverse de la loi normale
-    loi_gaussienne(tab, p, n, 40, 2);
-    //loi_uniforme(tab, p, n);
+
+    //loi_gaussienne(tab, p, n, 40, 2);
+    //                          |   |
+    //                          mu sigma
+    loi_uniforme(tab, p, n);
     for(int i=0; i<p; i++){
         if(tab[i]) enfiler(Nr(), f);
         else enfiler(Bc(), f);
