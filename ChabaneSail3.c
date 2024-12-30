@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 /***
     Binome : Chabane Oualid, Sail Ramy
@@ -745,35 +746,110 @@ void loi_uniforme(int tab[], int length, int nblancs){
     }
 }
 
-int random_gaussien_index(int length, int u, int sigma){
 
-}
-
-void loi_gaussienne_iid(int tab[], int length, int nblancs, int u, int sigma){
-    // loi normal iid en utilisant le TCL
-    for(int i=0; i<nblancs; i++){
-        tab[i]=0;
+// Function to calculate the quantile function (inverse CDF) of a normal distribution
+double normInv(double p, double mu, double sigma) {
+    if (p <= 0.0 || p >= 1.0) {
+        printf("The probability p must be between 0 and 1 (exclusive).\n");
+        exit(1);
     }
-    for(int i= nblancs; i<length; i++){
-        tab[i]=1;
+    if (sigma <= 0.0) {
+        printf("The standard deviation sigma must be positive.\n");
+        exit(1);
     }
 
-    for(int i=0; i<n; i++){
-        int tmp = random_gaussien_index(length, u, sigma);
-        if(tab[tmp] != tab[i]){
-            int swap = tab[tmp];
-            tab[tmp] = tab[i];
-            tab[i] = swap;
+    double q, r, val;
+
+    q = p - 0.5;
+
+    // AS241 Algorithm
+    if (fabs(q) <= 0.425) {
+        // 0.075 <= p <= 0.925
+        r = 0.180625 - q * q;
+        val = q * (((((((r * 2509.0809287301226727 +
+                         33430.575583588128105) * r + 67265.770927008700853) * r +
+                       45921.953931549871457) * r + 13731.693765509461125) * r +
+                     1971.5909503065514427) * r + 133.14166789178437745) * r +
+                   3.387132872796366608) /
+              (((((((r * 5226.495278852854561 +
+                     28729.085735721942674) * r + 39307.89580009271061) * r +
+                   21213.794301586595867) * r + 5394.1960214247511077) * r +
+                 687.1870074920579083) * r + 42.313330701600911252) * r + 1);
+    } else {
+        // Closer than 0.075 from {0, 1} boundary
+        if (q > 0.0) {
+            r = 1.0 - p;
+        } else {
+            r = p;
+        }
+
+        r = sqrt(-log(r)); // r = sqrt(-log(r))
+
+        if (r <= 5.0) {
+            // <==> min(p,1-p) >= exp(-25) ~= 1.3888e-11
+            r -= 1.6;
+            val = (((((((r * 7.7454501427834140764e-4 +
+                         0.0227238449892691845833) * r + 0.24178072517745061177) *
+                       r + 1.27045825245236838258) * r +
+                      3.64784832476320460504) * r + 5.7694972214606914055) * r +
+                    4.6303378461565452959) * r + 1.42343711074968357734) /
+                  (((((((r * 1.05075007164441684324e-9 +
+                         5.475938084995344946e-4) * r + 0.0151986665636164571966) *
+                       r + 0.14810397642748007459) * r + 0.68976733498510000455) *
+                     r + 1.6763848301838038494) * r + 2.05319162663775882187) *
+                   r + 1.0);
+        } else {
+            // Very close to 0 or 1
+            r -= 5.0;
+            val = (((((((r * 2.01033439929228813265e-7 +
+                         2.71155556874348757815e-5) * r +
+                        0.0012426609473880784386) * r + 0.026532189526576123093) *
+                      r + 0.29656057182850489123) * r +
+                     1.7848265399172913358) * r + 5.4637849111641143699) * r +
+                   6.6579046435011037772) /
+                  (((((((r * 2.04426310338993978564e-15 +
+                         1.4215117583164458887e-7) * r +
+                        1.8463183175100546818e-5) * r +
+                       7.868691311456132591e-4) * r + 0.0148753612908506148525) *
+                     r + 0.13692988092273580531) * r + 0.59983220655588793769) *
+                   r + 1.0);
+        }
+
+        if (q < 0.0) {
+            val = -val;
         }
     }
+
+    return mu + sigma * val;
 }
+
+void loi_gaussienne(int tab[], int length, int nblancs, int mu, int sigma){
+    for(int i=0; i<length; i++) tab[i]=1;
+    for(int i=0; i<nblancs; i++){
+        int idx_gaussien = (int) (normInv((rand() + 1.0) / (RAND_MAX + 2.0), mu, sigma) * sigma + mu);
+        if(!tab[idx_gaussien]){
+            //trouve plus proche point noir
+            int offset=1;
+            int stop=0;
+            while(!stop){
+                idx_gaussien+=(1 - offset%2) * offset;
+                if(idx_gaussien >= 0 && idx_gaussien < length && tab[idx_gaussien]) stop=1;
+                else offset++;
+            }
+        }
+        tab[idx_gaussien] = 0;
+    }
+}
+
 
 image Alea(int k, int n){
     int p = 4 * power(2, k);
     file f;
     initialiser_file(&f);
     int tab[p];
-    loi_uniforme(tab, p, n);
+    //Il y a une possibilité de générer un échantillon gaussien en utilisant la fonction de répartition inverse de la loi normale
+    loi_gaussienne(tab, p, n, 40, 2);
+    //loi_uniforme(tab, p, n);
     for(int i=0; i<p; i++){
         if(tab[i]) enfiler(Nr(), f);
         else enfiler(Bc(), f);
@@ -791,7 +867,7 @@ image Alea(int k, int n){
 
 void main() {
     srand(time(NULL));
-    image img = Alea(3, 2);
-    PrintPix(img, 5);
+    image img = Alea(5, 10);
+    PrintPix(img, 6);
     FreeImage(img);
 }
