@@ -487,38 +487,37 @@ void FreeImage(image img){
     - si l'image contient que des feuilles blanches renvoie b, si que
     des feuilles noires renvoie N, si pas monochrome renvoie -
 */
+
 char estMono(image img){
-
-    bool blanc = true;
-    bool noir = true;
-
+    int countB = 0;
+    int countN = 0;
     int i = 0;
-    while (blanc || noir){
-        printf("i = : %d \n ",i);
-        if(blanc && img->Im[i] == NULL){
-            // cas d'une sous-image noire, on met blanc à false
-            blanc = false;
+    
+    while (i<4){
+        if(img->Im[i] == NULL){
+            countN ++;
+        }else{
+            if(img->Im[i]->blanc){
+                countB ++;
+            }else{
+                return '-';
+            }
         }
-        else if(noir && img->Im[i]->blanc){
-             // cas d'une sous-image blanc, on met noir à false
-                noir = false;
-        }
-        else {
-            //cas d'une sous image composée, on s'arrete, car l'image n'est pas monochrome
-            noir = false;
-            blanc = false;
+
+        if(countB != 0 && countN != 0) {
+            return '-';
         }
         i++;
     }
-    if(noir){
+    if(countN == 4){
         return 'N';
     }
 
-    if(blanc){
+    if(countB == 4){
         return 'b';
     }
 
-    return '-';
+    
 }
 
 void Simplifie(image* img){
@@ -528,7 +527,7 @@ void Simplifie(image* img){
         Simplifie(&((*img)->Im[2]));
         Simplifie(&((*img)->Im[3]));
 
-        int mono = estMono(*img);
+        char mono = estMono(*img);
 
         if(mono == 'b'){
             FreeImage(*img);
@@ -568,7 +567,7 @@ bool IntersectionVide (image i1, image i2){
 /*************************************************/
 
 /*
-- teste si les deux arbre sont égaux sémantiquement (et pas qu'en mémoire)
+- test si les deux arbre sont égaux sémantiquement (et pas qu'en mémoire)
 - Une manière plus optimisée serait peut etre que c'est un noeud internes regarder si les quatre feilles sont de même
 nature avant de partir récursivement ?
 */
@@ -841,7 +840,6 @@ void loi_gaussienne(int tab[], int length, int nblancs, int mu, int sigma){
     }
 }
 
-
 image Alea(int k, int n){
     //Fonction de la question 13
     //L'idée: on génére tout les fils à la profodeur k, dans une file, suiavnt la loi donnée (gaussienne ou uniforme)
@@ -876,7 +874,7 @@ void main() {
     image img;
     // test affichage PrintI, PrintPf
     if(false){
-        printf("Teste de l'affichage simple : \n\n");
+        printf("test de l'affichage simple : \n\n");
     
         img = Bc();
         printf("Doit afficher b : "); PrintI(img);FreeImage(img);
@@ -887,7 +885,7 @@ void main() {
         img = Qt(Qt(Bc(), Nr(), Bc(), Nr()), Nr(), Bc(), Nr());
         printf("Doit afficher ++bNbNNbN : "); PrintI(img);FreeImage(img);
 
-        printf("Teste de l'affichage en profondeur : \n\n");
+        printf("test de l'affichage en profondeur : \n\n");
 
         img = Bc();
         printf("Doit afficher b0 : "); PrintPf(img);FreeImage(img);
@@ -919,7 +917,7 @@ void main() {
 
         
     }
-    // teste de noire et blanc
+    // test de noire et blanc
     if (false){
         printf("\n entrez des images quelconque, noir, blanches, pour tester la fonction Noir() et Blanc() \n\n");
         printf("Appuyer sur q pour quitter la boucle de saisie : \n");
@@ -945,7 +943,7 @@ void main() {
             
         }while(c!='q');
     }
-    // On teste printPix et damier en même temps
+    // On test printPix et damier en même temps
     if (false){
         for (int i = 0; i<6; i++){
             printf("Affichge de damier de profondeur %d avec PrintPix avec k = %d \n\n",i,i);
@@ -954,7 +952,7 @@ void main() {
             FreeImage(img);
         }
     }
-    // teste demitour
+    // test demitour
     if(false){
         printf("Test de Demitour : Avec : ++bNNb+bbbN+NNbbN, On doit avoir : +N+bbNN+Nbbb+bNNb, Essaye : \n\n");
 
@@ -975,13 +973,122 @@ void main() {
     }
     // FreeImage a deja été testé avec les print d'allocation et desallocation qui sont en commentaires
 
-    // teste de Simplifie
-    if (true){
+    // test de Simplifie
+    if (false){
         printf("\n Test de Simplify \n\n");
         img = Qt(Nr(),Nr(),Nr(),Nr());
         Simplifie(&img);
+
         printf("pour +NNNN on doit avoir N : "); PrintI(img);
+        FreeImage(img);
+
+        img = Qt(Bc(),Bc(),Bc(),Bc());
+        Simplifie(&img);
+        printf("pour +bbbb on doit avoir b : "); PrintI(img);
+        FreeImage(img);
+
+        printf("pour +(+NNNN)(+Nb(+NN(+N(+N(+NNNN)NN)NN)N)b)(+NbN(+NbN(+bbbb)))(+bb(+bbbb)b) on doit avoir +N(+NbNb)(+NbN(+NbNb))b : ");
+        printf("Rentrez et verifiez : \n");
+        img = LireI();
+        Simplifie(&img);
+        printf("resultat : ");PrintI(img);
+
     }
+    
+    // test intersectionVide
+    if(false){
+        printf("\nTeste de intersectionVide : \n\n");
+        image img2;
+        printf("Rentrez ++bNbN+NbbNN+bbNN : ");
+        img = LireI();
+        printf("Rentrez +b+bNbbb+bNbN : ");
+        img2 = LireI();
+
+        printf("InterSectionVide(++bNbN+NbbNN+bbNN, +b+bNbbb+bNbN) : %d \n", IntersectionVide(img,img2));
+        FreeImage(img);
+        FreeImage(img2);
+
+        printf("Rentrez une premiere image : ");
+        img = LireI();
+        printf("Rentrez une deuxieme image : ");
+        img2 = LireI();
+
+        printf("InterSectionVide(++bNbN+NbbNN+bbNN, +b+bNbbb+bNbN) : %d \n", IntersectionVide(img,img2));
+        FreeImage(img);
+        FreeImage(img2);
+        
+    }
+
+    // test compteSousArbre
+    if(false){
+        printf("\n test de CompteSousArbre \n\n" );
+
+        image img2;
+        printf("Rentrez +b+bNNbNb en I1 : ");
+        img = LireI();
+        printf("Rentrez +b+bNNbNb en I2 : ");
+        img2 = LireI();
+
+        printf("I1 doit etre sous arbre de I2 1 fois et il l'est : %d \n", CompteSousArbres(img,img2));
+        FreeImage(img);
+        FreeImage(img2);
+
+        printf("Rentrez +b+bNNbNb en I1 : ");
+        img = LireI();
+        printf("Rentrez +N(+b(+bNNb)Nb)(+b(+b(+bNNb)Nb)Nb)N en I2 : ");
+        img2 = LireI();
+
+        printf("I1 doit etre sous arbre de I2 2 fois et il l'est : %d \n", CompteSousArbres(img,img2));
+        FreeImage(img);
+        FreeImage(img2);
+
+        printf("Rentrez N en I1 : ");
+        img = LireI();
+        printf("Rentrez ++NNNN+NNNN+NNNN+NNNN en I2 : ");
+        img2 = LireI();
+
+        printf("I1 doit etre sous arbre de I2 16 fois et il l'est : %d \n", CompteSousArbres(img,img2));
+        FreeImage(img);
+        FreeImage(img2);
+
+        printf("Faites des testes libres : \n");
+        char c;
+        do{
+            printf("Rentrez I1 : ");img = LireI();
+            printf("Rentrez I2 : ");img2 = LireI();
+
+            printf("I1 est %d fois sous arbre de I2 \n", CompteSousArbres(img,img2));
+            
+            FreeImage(img);
+            FreeImage(img2);
+            printf("q : quitter, entrer : continuer \n");
+            scanf("%c",&c);
+            
+        }while(c!='q');
+
+
+    }
+    //test de Alea
+    if(true){
+        printf("\n test de la fnction Alea \n\n");
+        printf("Alea(1,2) genere 10 fois \n");
+        for(int i=0; i<10; i++){
+            img = Alea(1,2);
+            PrintI(img);
+            FreeImage(img);
+        }
+        
+        
+
+        /*img = Alea(0,1);
+        img = Alea(0,0);
+        img = Alea(100,1);
+        img = Alea(10,1000);
+        img = Alea(2,2);*/
+
+
+    }
+    
     /*srand(time(NULL));
     image img = Alea(5, 10);
     PrintPix(img, 6);
