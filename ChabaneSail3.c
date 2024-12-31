@@ -492,7 +492,7 @@ char estMono(image img){
     int countB = 0;
     int countN = 0;
     int i = 0;
-    
+
     while (i<4){
         if(img->Im[i] == NULL){
             countN ++;
@@ -517,7 +517,7 @@ char estMono(image img){
         return 'b';
     }
 
-    
+
 }
 
 void Simplifie(image* img){
@@ -726,21 +726,309 @@ void PrintPix(image img, int k){
 /*                                               */
 /*************************************************/
 
-void loi_uniforme(int tab[], int length, int nblancs){
-    //genere un tableau de taille length avec nblancs échantillons blancs selon la loi uniforme
-    for(int i=0; i<nblancs; i++){
-        tab[i]=0;
+
+/***
+    Déclaration de structure des arbres AVL pour l'utiliser dans la génération uniforme de noeuds
+    (Complétement développé par nous, on n el'a pas trouvé en ligne)
+***/
+// Define the AVL structure with a typedef for easy reference
+typedef struct avl_s {
+    int diff;
+    int e;
+    struct avl_s* left;  // Pointers to left and right child
+    struct avl_s* right;
+}* avl;  // Define avl as a pointer to the struct
+
+typedef struct avl_stack_s{
+    avl top;
+    struct avl_stack_s* next;
+}* avl_stack;
+
+avl_stack create_avl_stack(){
+    return NULL;
+}
+
+void push(avl_stack* s, avl v){
+    avl_stack node = (avl_stack) malloc(sizeof(struct avl_stack_s));
+    node->top=v;
+    node->next=*s;
+    *s=node;
+}
+
+int empty_avl_stack(avl_stack s){
+    return s->top==NULL;
+}
+
+avl pop(avl_stack* s, avl* ret){
+    *ret = (*s)->top;
+    avl_stack fst = *s;
+    *s = (*s)->next;
+    free(fst);
+  }
+
+// Function to create a new AVL node
+avl create(int e) {
+    avl node = (avl) malloc(sizeof(struct avl_s));  // Allocate memory for a new node
+    if (node == NULL) {
+        printf("Memory allocation failed\n");
+        exit(1);
     }
-    for(int i= nblancs; i<length; i++){
-        tab[i]=1;
-    }
-    for(int i=0; i<length; i++){
-        int tmp = rand()%length;
-        if(tab[tmp] != tab[i]){
-            int swap = tab[tmp];
-            tab[tmp] = tab[i];
-            tab[i] = swap;
+    node->diff = 0;
+    node->e=e;
+    node->left = node->right = NULL;
+    return node;
+}
+
+void rotate_left(avl* tr){
+    avl rs = (*tr)->right;
+    (*tr)->right = rs->left;
+    rs->left = *tr;
+    *tr=rs;
+}
+
+void rotate_right(avl* tr){
+    avl ls = (*tr)->left;
+    (*tr)->left = ls->right;
+    ls->right = *tr;
+    *tr=ls;
+}
+
+void rebalance_right(avl* tr){
+    if((*tr)->left->diff > 0){
+        //double rotation left, then right
+        int bal = (*tr)->left->right->diff;
+        rotate_left(&((*tr)->left));
+        rotate_right(tr);
+        if(bal == -1){
+            (*tr)->left->diff=0;
+            (*tr)->right->diff=1;
+        } else if (bal == 1){
+            (*tr)->left->diff=-1;
+            (*tr)->right->diff=0;
+        } else if(bal == 0){
+            (*tr)->left->diff=0;
+            (*tr)->right->diff=0;
         }
+        else printf("unexpected");
+    } else {
+        //simple rotation right
+        rotate_right(tr);
+        (*tr)->diff=0;
+        (*tr)->right->diff=0;
+    }
+}
+
+void rebalance_left(avl* tr){
+    if((*tr)->right->diff < 0){
+        //double rotation right, then left
+        int bal = (*tr)->right->left->diff;
+        rotate_right(&((*tr)->right));
+        rotate_left(tr);
+        if(bal == -1){
+            (*tr)->right->diff=1;
+            (*tr)->left->diff=0;
+        } else if (bal == 1){
+            (*tr)->right->diff=0;
+            (*tr)->left->diff=-1;
+        } else if(bal == 0){
+            (*tr)->right->diff=0;
+            (*tr)->left->diff=0;
+        }
+        else printf("unexpected");
+    } else {
+        //simple rotation right
+        rotate_left(tr);
+        (*tr)->diff=0;
+        (*tr)->left->diff=0;
+    }
+}
+
+void add_aux(avl* tr, int e, int* balanced) {
+    if (*tr == NULL) {
+        *tr = create(e);
+        return;
+    }
+
+    if (e < (*tr)->e) {
+        add_aux(&((*tr)->left), e, balanced);
+        if (!(*balanced)) {
+            (*tr)->diff--;
+            if ((*tr)->diff == -2) {
+                rebalance_right(tr);
+                *balanced = 1;
+            }
+            if((*tr)->diff==0){
+                *balanced = 1;
+            }
+        }
+    } else {
+        add_aux(&((*tr)->right), e, balanced);
+        if (!(*balanced)) {
+            (*tr)->diff++;
+            if ((*tr)->diff == 2) {
+                rebalance_left(tr);
+                *balanced = 1;
+            }
+            if((*tr)->diff==0){
+                *balanced = 1;
+            }
+        }
+    }
+}
+
+void add(avl* tr, int e){
+    int* balanced = (int*) malloc(sizeof(int));
+    *balanced=0;
+    add_aux(tr, e, balanced);
+}
+
+void del2(avl* tr, avl_stack stack, int v){
+    int stop=0;
+    avl node=*tr;
+    while(node!=NULL && v != node->e){
+        push(&stack, node);
+        if(v<node->e){
+            node=node->left;
+        }
+        else {
+            node=node->right;
+        }
+    }
+    if(node!=NULL){
+        //on cherche le suivant
+        if(node->right!=NULL){
+            push(&stack, node);
+            avl suiv=node->right;
+            while(suiv->left != NULL){
+                push(&stack, suiv);
+                suiv = suiv->left;
+            }
+            node->e = suiv->e;
+            node=suiv;
+        }
+        stop = 0;
+        avl father;
+        int first=1;
+        while(!stop && !empty_avl_stack(stack)){
+            pop(&stack, &father);
+            if(first){
+                first=0;
+                if(node==father->right){
+                    father->right=NULL;
+                    father->diff--;
+                } else {
+                    father->left = node->left;
+                    father->diff++;
+                }
+                free(node);
+                node=father;
+            } else {
+                if(node->diff==1 || node->diff==-1) {
+                    //we need to stop
+                    stop=1;
+                } else {
+                    avl temp = node;
+                    if(node->diff>1)
+                        rebalance_left(&node);
+
+                    else if (node->diff < -1)
+                        rebalance_right(&node);
+
+
+                    if(temp==father->right){
+                        father->diff--;
+                        father->right=node;
+                    } else {
+                        father->diff++;
+                        father->left=node;
+                    }
+                    node=father;
+                }
+            }
+
+        }
+        if(!stop && node->diff!=1 && node->diff !=-1) {
+            if(node->diff>1)
+                rebalance_left(&node);
+
+            else if (node->diff < -1)
+                rebalance_right(&node);
+            *tr=node;
+        }
+    }
+}
+
+void del(avl* tr, int v){
+    avl_stack stack=create_avl_stack();
+    del2(tr, stack, v);
+}
+
+void dfs(avl tr){
+    if(tr != NULL) {
+        dfs(tr->left);
+        printf("%d ", tr->e);
+        dfs(tr->right);
+    }
+}
+
+int in_avl(avl tr, int e){
+    if(tr==NULL) return 0;
+
+    if(e<tr->e) return in_avl(tr->left, e);
+    if(e>tr->e) return in_avl(tr->right, e);
+    return 1;
+}
+
+void free_t(avl tr){
+    if(tr!=NULL){
+        free_t(tr->left);
+        free_t(tr->right);
+        free(tr);
+    }
+}
+
+int height(avl tree){
+        if (tree==NULL){return 0;}
+        else{
+            int i1=height(tree->left);
+            int i2=height(tree->right);
+            if(i1>i2) return i1+1;
+            else return i2+1;
+        }
+}
+
+void avl_to_stack(avl tree, pile* p){
+    if(tree != NULL){
+        avl_to_stack(tree->right, p);
+        push(p, tree->e);
+        avl_to_stack(tree->left, p);
+    }
+}
+
+/***
+    Fin de déclaration de la structure des AVL
+***/
+
+
+void loi_uniforme(avl* tree, int length, int nblancs){
+    *tree = NULL;
+    for(int i= 0; i < nblancs; i++){
+        int idx = rand()%length, offset=0, stop=0;
+        while(!stop){
+            if(idx + offset < length && !in_avl(*tree, idx + offset)){
+                idx+=offset;
+                stop=1;
+            } else if(idx - offset> -1 && !in_avl(*tree, idx - offset)){
+                idx-=offset;
+                stop=1;
+            } else if(idx - offset < 0 && idx + offset >= length){
+                printf("ERROR: n est ttrop grand");
+                break;
+            }
+            offset++;
+        }
+
+        add(tree, idx);
     }
 }
 
@@ -821,22 +1109,27 @@ double normInv(double p, double mu, double sigma) {
     return mu + sigma * val;
 }
 
-void loi_gaussienne(int tab[], int length, int nblancs, int mu, int sigma){
+void loi_gaussienne(avl* tree, int length, int nblancs, int mu, int sigma){
     //Fonction suivante génére un tableau de nblancs images blanches suivant la distribution gausienne N(mu, sigma), avec mu, la position moyenne dans les feuilles de l'arbre et sigma l'écarte type
-    for(int i=0; i<length; i++) tab[i]=1;
-    for(int i=0; i<nblancs; i++){
-        int idx_gaussien = (int) normInv((rand() + 1.0) / (RAND_MAX + 2.0), mu, sigma);
-        if(!tab[idx_gaussien]){
-            //trouve plus proche point noir
-            int offset=1;
-            int stop=0;
-            while(!stop){
-                idx_gaussien+=(1 - offset%2) * offset;
-                if(idx_gaussien >= 0 && idx_gaussien < length && tab[idx_gaussien]) stop=1;
-                else offset++;
+    *tree = NULL;
+    for(int i= 0; i < nblancs; i++){
+        //Pour généraliser encore mieux à une loi quelconque, il suffit de rempalcer normInv par la loi souhaité implementer par exemple rand()%length dans le cas de la loi uniforme
+        int idx = (int) normInv((rand() + 1.0) / (RAND_MAX + 2.0), mu, sigma), offset=0, stop=0;
+        while(!stop){
+            if(idx + offset < length && !in_avl(*tree, idx + offset)){
+                idx+=offset;
+                stop=1;
+            } else if(idx - offset> -1 && !in_avl(*tree, idx - offset)){
+                idx-=offset;
+                stop=1;
+            } else if(idx - offset < 0 && idx + offset >= length){
+                printf("ERROR: n est ttrop grand");
+                break;
             }
+            offset++;
         }
-        tab[idx_gaussien] = 0;
+
+        add(tree, idx);
     }
 }
 
@@ -845,19 +1138,34 @@ image Alea(int k, int n){
     //L'idée: on génére tout les fils à la profodeur k, dans une file, suiavnt la loi donnée (gaussienne ou uniforme)
     //      On itére sur la file tant qu'elle est pleine, on regroupe les elements par quatre, formant par cela des
     //      Noeuds Qt, vers la fin, on obtient un arbre dont les fils sont génére avec la loi donnée
-    int p = 4 * PowExp(2, k);
+    int p = PowExp(4, k);
     file f;
     initialiser_file(&f);
-    int tab[p];
+
+    avl tree;
+    pile pl=NULL;
     //Il y a une possibilité de générer un échantillon gaussien en utilisant la fonction de répartition inverse de la loi normale
 
-    loi_gaussienne(tab, p, n, 100, 5);
+    //loi_gaussienne(&tree, p, n, 4*4*4*4-20, 4);
     //                          |   |
     //                          mu sigma
-    //loi_uniforme(tab, p, n);
-    for(int i=0; i<p; i++){
-        if(tab[i]) enfiler(Nr(), f);
-        else enfiler(Bc(), f);
+    loi_uniforme(&tree, p, n);
+    avl_to_stack(tree, &pl);
+    int i=0;
+    while(pl != NULL){
+
+        int premiere_borne = depiler(&pl);
+        while(i < premiere_borne){
+            enfiler(Nr(), f);
+            i++;
+        }
+        enfiler(Bc(), f);
+        i++;
+    }
+
+    while(i < p){
+        enfiler(Nr(), f);
+        i++;
     }
 
     image racine;
@@ -875,7 +1183,7 @@ void main() {
     // test affichage PrintI, PrintPf
     if(false){
         printf("test de l'affichage simple : \n\n");
-    
+
         img = Bc();
         printf("Doit afficher b : "); PrintI(img);FreeImage(img);
         img = Nr();
@@ -912,10 +1220,10 @@ void main() {
 
             printf("q : quitter, entrer : continuer \n");
             scanf("%c",&c);
-            
+
         }while(c!='q');
 
-        
+
     }
     // test de noire et blanc
     if (false){
@@ -940,7 +1248,7 @@ void main() {
 
             printf("q : quitter, entrer : continuer \n");
             scanf("%c",&c);
-            
+
         }while(c!='q');
     }
     // On test printPix et damier en même temps
@@ -994,7 +1302,7 @@ void main() {
         printf("resultat : ");PrintI(img);
 
     }
-    
+
     // test intersectionVide
     if(false){
         printf("\nTeste de intersectionVide : \n\n");
@@ -1016,7 +1324,7 @@ void main() {
         printf("InterSectionVide(++bNbN+NbbNN+bbNN, +b+bNbbb+bNbN) : %d \n", IntersectionVide(img,img2));
         FreeImage(img);
         FreeImage(img2);
-        
+
     }
 
     // test compteSousArbre
@@ -1058,13 +1366,13 @@ void main() {
             printf("Rentrez I2 : ");img2 = LireI();
 
             printf("I1 est %d fois sous arbre de I2 \n", CompteSousArbres(img,img2));
-            
+
             FreeImage(img);
             FreeImage(img2);
             printf("q : quitter, entrer : continuer \n");
             scanf("%c",&c);
-            
-        }while(c!='q');
+
+        } while(c!='q');
 
 
     }
@@ -1073,7 +1381,7 @@ void main() {
         srand(time(NULL));
         printf("\n test de la fnction Alea \n\n");
 
-        printf("Alea(0,0) : ");
+        /*printf("Alea(0,0) : ");
         img = Alea(0,0);
         PrintI(img);
         FreeImage(img);
@@ -1083,18 +1391,23 @@ void main() {
         PrintI(img);
         FreeImage(img);
 
-        printf("Alea(10,1000) : \n");
+        printf("Alea(10,1000) : \n\n");
         img = Alea(10,1000);
         PrintPix(img,6);
         FreeImage(img);
+        */
+        printf("Alea(3,5) : \n");
+        img = Alea(4, 20);
+        PrintPix(img,6);
+        FreeImage(img);
 
-        printf("Alea(1,2)  10 fois \n");
+        /*printf("Alea(1,2)  10 fois \n");
         for(int i=0; i<10; i++){
             img = Alea(1,2);
             PrintI(img);
             FreeImage(img);
         }
-
+        */
     }
-    
+
 }
