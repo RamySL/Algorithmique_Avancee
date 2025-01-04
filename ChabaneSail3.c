@@ -728,47 +728,19 @@ void PrintPix(image img, int k){
 
 
 /***
-    Déclaration de structure des arbres AVL pour l'utiliser dans la génération uniforme de noeuds
-    (Complétement développé par nous, on n el'a pas trouvé en ligne)
+ Le code suivant est une Déclaration de la structure des arbres AVL à utiliser dans la fonction Alea.
+ Entièrement développée par nous, nous ne l'avons pas trouvée en ligne.
 ***/
-// Define the AVL structure with a typedef for easy reference
+
 typedef struct avl_s {
     int diff;
     int e;
-    struct avl_s* left;  // Pointers to left and right child
+    struct avl_s* left;
     struct avl_s* right;
-}* avl;  // Define avl as a pointer to the struct
+}* avl;
 
-typedef struct avl_stack_s{
-    avl top;
-    struct avl_stack_s* next;
-}* avl_stack;
-
-avl_stack create_avl_stack(){
-    return NULL;
-}
-
-void push(avl_stack* s, avl v){
-    avl_stack node = (avl_stack) malloc(sizeof(struct avl_stack_s));
-    node->top=v;
-    node->next=*s;
-    *s=node;
-}
-
-int empty_avl_stack(avl_stack s){
-    return s->top==NULL;
-}
-
-avl pop(avl_stack* s, avl* ret){
-    *ret = (*s)->top;
-    avl_stack fst = *s;
-    *s = (*s)->next;
-    free(fst);
-  }
-
-// Function to create a new AVL node
 avl create(int e) {
-    avl node = (avl) malloc(sizeof(struct avl_s));  // Allocate memory for a new node
+    avl node = (avl) malloc(sizeof(struct avl_s));
     if (node == NULL) {
         printf("Memory allocation failed\n");
         exit(1);
@@ -795,7 +767,6 @@ void rotate_right(avl* tr){
 
 void rebalance_right(avl* tr){
     if((*tr)->left->diff > 0){
-        //double rotation left, then right
         int bal = (*tr)->left->right->diff;
         rotate_left(&((*tr)->left));
         rotate_right(tr);
@@ -844,6 +815,11 @@ void rebalance_left(avl* tr){
 }
 
 void add_aux(avl* tr, int e, int* balanced) {
+    /*
+        Dépendences:
+            rebalance_left
+            rebalance_right
+    */
     if (*tr == NULL) {
         *tr = create(e);
         return;
@@ -877,101 +853,20 @@ void add_aux(avl* tr, int e, int* balanced) {
 }
 
 void add(avl* tr, int e){
+    /*
+        Dépendences:
+            add_aux
+    */
     int* balanced = (int*) malloc(sizeof(int));
     *balanced=0;
     add_aux(tr, e, balanced);
 }
 
-void del2(avl* tr, avl_stack stack, int v){
-    int stop=0;
-    avl node=*tr;
-    while(node!=NULL && v != node->e){
-        push(&stack, node);
-        if(v<node->e){
-            node=node->left;
-        }
-        else {
-            node=node->right;
-        }
-    }
-    if(node!=NULL){
-        //on cherche le suivant
-        if(node->right!=NULL){
-            push(&stack, node);
-            avl suiv=node->right;
-            while(suiv->left != NULL){
-                push(&stack, suiv);
-                suiv = suiv->left;
-            }
-            node->e = suiv->e;
-            node=suiv;
-        }
-        stop = 0;
-        avl father;
-        int first=1;
-        while(!stop && !empty_avl_stack(stack)){
-            pop(&stack, &father);
-            if(first){
-                first=0;
-                if(node==father->right){
-                    father->right=NULL;
-                    father->diff--;
-                } else {
-                    father->left = node->left;
-                    father->diff++;
-                }
-                free(node);
-                node=father;
-            } else {
-                if(node->diff==1 || node->diff==-1) {
-                    //we need to stop
-                    stop=1;
-                } else {
-                    avl temp = node;
-                    if(node->diff>1)
-                        rebalance_left(&node);
-
-                    else if (node->diff < -1)
-                        rebalance_right(&node);
-
-
-                    if(temp==father->right){
-                        father->diff--;
-                        father->right=node;
-                    } else {
-                        father->diff++;
-                        father->left=node;
-                    }
-                    node=father;
-                }
-            }
-
-        }
-        if(!stop && node->diff!=1 && node->diff !=-1) {
-            if(node->diff>1)
-                rebalance_left(&node);
-
-            else if (node->diff < -1)
-                rebalance_right(&node);
-            *tr=node;
-        }
-    }
-}
-
-void del(avl* tr, int v){
-    avl_stack stack=create_avl_stack();
-    del2(tr, stack, v);
-}
-
-void dfs(avl tr){
-    if(tr != NULL) {
-        dfs(tr->left);
-        printf("%d ", tr->e);
-        dfs(tr->right);
-    }
-}
 
 int in_avl(avl tr, int e){
+    /*
+        ne dépend d'aucune fonction
+    */
     if(tr==NULL) return 0;
 
     if(e<tr->e) return in_avl(tr->left, e);
@@ -987,20 +882,14 @@ void free_t(avl tr){
     }
 }
 
-int height(avl tree){
-        if (tree==NULL){return 0;}
-        else{
-            int i1=height(tree->left);
-            int i2=height(tree->right);
-            if(i1>i2) return i1+1;
-            else return i2+1;
-        }
-}
-
 void avl_to_stack(avl tree, pile* p){
+    /*
+        Dépendences:
+            empiler
+    */
     if(tree != NULL){
         avl_to_stack(tree->right, p);
-        push(p, tree->e);
+        empiler(&(tree->e), p);
         avl_to_stack(tree->left, p);
     }
 }
@@ -1011,10 +900,19 @@ void avl_to_stack(avl tree, pile* p){
 
 
 void loi_uniforme(avl* tree, int length, int nblancs){
+    /*
+        Dépendences:
+            in_avl
+    */
     *tree = NULL;
+    if(nblancs>length) {
+        printf("\nLe nombre d'images blanches est absurde");
+        return;
+    }
     for(int i= 0; i < nblancs; i++){
         int idx = rand()%length, offset=0, stop=0;
         while(!stop){
+            //Si l'indice généré est déja présent, on cherche l'indice libre le plus proche à lui
             if(idx + offset < length && !in_avl(*tree, idx + offset)){
                 idx+=offset;
                 stop=1;
@@ -1034,7 +932,7 @@ void loi_uniforme(avl* tree, int length, int nblancs){
 
 double normInv(double p, double mu, double sigma) {
     //Cette fonction est trouvé sur github: https://gist.github.com/kmpm/1211922/6b7fcd0155b23c3dc71e6f4969f2c48785371292
-    //Elle basée sur les principes de l'analyse numérique, c'est une approximation par tranche de la fonctio inverse de la ofnction de répartition gaussienne
+    //Elle basée sur les principes de l'analyse numérique, c'est une approximation par tranche de la fonction inverse de la fonction de répartition gaussienne
     if (p <= 0.0 || p >= 1.0) {
         printf("The probability p must be between 0 and 1 (exclusive).\n");
         exit(1);
@@ -1110,11 +1008,32 @@ double normInv(double p, double mu, double sigma) {
 }
 
 void loi_gaussienne(avl* tree, int length, int nblancs, int mu, int sigma){
-    //Fonction suivante génére un tableau de nblancs images blanches suivant la distribution gausienne N(mu, sigma), avec mu, la position moyenne dans les feuilles de l'arbre et sigma l'écarte type
+     /***
+     La fonction void loi_gaussienne(avl* tree, int length, int nblancs, int mu, int sigma) génère un échantillon gaussien d'images blanches avec Mu et Sigma.
+     Mu représente l'indice de l'image sur laquelle on veut concentrer plus les images blanches dans son voisinage.
+     Sigma représente la distance moyenne entre chaque image blanche par rapport à la moyenne.
+     Lorsqu'on l'augmente, l'échantillon se répartit de plus en plus largement.
+     L'indice d'une image correspond à son ordre parmi les fils.
+     ***/
+    /*
+        Dépendences:
+            normInv
+            add
+    */
     *tree = NULL;
+    if(nblancs>length) {
+        printf("\nLe nombre d'images blanches est absurde");
+        return;
+    }
     for(int i= 0; i < nblancs; i++){
         //Pour généraliser encore mieux à une loi quelconque, il suffit de rempalcer normInv par la loi souhaité implementer par exemple rand()%length dans le cas de la loi uniforme
         int idx = (int) normInv((rand() + 1.0) / (RAND_MAX + 2.0), mu, sigma), offset=0, stop=0;
+        //Puisque idx est généré par la fonction  de répartition, il y a rien qui l'empeche d'etre négative ou plus grand que length
+        //dans ce cas, on le normalize à 0 ou à length-1
+        if(idx < 0) idx = 0;
+        if(idx >= length) idx = length-1;
+
+        //Si l'indice généré est déja présent, on cherche l'indice libre le plus proche à lui
         while(!stop){
             if(idx + offset < length && !in_avl(*tree, idx + offset)){
                 idx+=offset;
@@ -1123,7 +1042,7 @@ void loi_gaussienne(avl* tree, int length, int nblancs, int mu, int sigma){
                 idx-=offset;
                 stop=1;
             } else if(idx - offset < 0 && idx + offset >= length){
-                printf("ERROR: n est ttrop grand");
+                printf("ERROR: n est trop grand");
                 break;
             }
             offset++;
@@ -1135,26 +1054,96 @@ void loi_gaussienne(avl* tree, int length, int nblancs, int mu, int sigma){
 
 image Alea(int k, int n){
     //Fonction de la question 13
-    //L'idée: on génére tout les fils à la profodeur k, dans une file, suiavnt la loi donnée (gaussienne ou uniforme)
-    //      On itére sur la file tant qu'elle est pleine, on regroupe les elements par quatre, formant par cela des
-    //      Noeuds Qt, vers la fin, on obtient un arbre dont les fils sont génére avec la loi donnée
+    /***
+     L'idée : on génère tous les fils à la profondeur k, puis on les enfile, suivant la loi donnée (gaussienne ou uniforme).
+     On itère sur la file tant qu'elle est pleine, en regroupant les éléments par quatre pour former des nœuds Qt.
+     À la fin, on obtient un arbre dont les fils sont générés selon la loi donnée.
+     La génération des fils suit cette démarche :
+         1. On appelle la fonction associée à la loi choisie (gaussienne ou uniforme), qui retourne une collection triée d'indices (exemple : 1, 3, 5).
+            Ces indices représentent les positions des images blanches dans l'ensemble des images générées.
+         2. Ensuite, on parcourt tous les indices de 0 à 2^k - 1.
+            - Lorsqu'on rencontre un indice correspondant à la collection d'indices retournée, on le dépile.
+            - À cet instant, une image blanche est ajoutée (enfilée) dans la file des images générées.
+         Au final, la file contiendra toutes les images, avec les images blanches placées aux indices spécifiés par la loi.
+    ***/
+    /*
+        Dépendences:
+            initialiser_file
+            PowExp
+            loi_uniforme/loi_gaussienne
+            avl_to_stack
+            depiler
+            enfiler
+            filevide
+            defiler
+            liberer_file
+            free_t
+    */
+
     int p = PowExp(4, k);
     file f;
     initialiser_file(&f);
 
-    avl tree;
+    avl tree=NULL;
     pile pl=NULL;
-    //Il y a une possibilité de générer un échantillon gaussien en utilisant la fonction de répartition inverse de la loi normale
 
-    //loi_gaussienne(&tree, p, n, 4*4*4*4-20, 4);
-    //                          |   |
-    //                          mu sigma
+    /***
+     La fonction void loi_gaussienne(avl* tree, int length, int nblancs, int mu, int sigma) génère un échantillon gaussien d'images blanches avec Mu et Sigma.
+     Mu représente l'indice de l'image sur laquelle on veut concentrer plus les images blanches dans son voisinage.
+     Sigma représente la distance moyenne entre chaque image blanche par rapport à la moyenne.
+     Lorsqu'on l'augmente, l'échantillon se répartit de plus en plus largement.
+     L'indice d'une image correspond à son ordre parmi les fils.
+     dans les lignes d ecommentaires suivantes, on vous met un exemple d'un échantillon gaussien généré avec
+     L'appel Alea(4, 10) avec Mu = 4*4*4*4-20 et Sigma = 7
+     Pour le générer il faut remplacer la ligne du code loi_uniforme(&tree, p, n); par loi_gaussienne(&tree, p, n, 4*4*4*4-20, 7);
+    /*
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        8888888888888888888888888888888888888888888888888888888888888888
+        888888888888888888888888888888888888....888888888888....8888....
+        888888888888888888888888888888888888....888888888888....8888....
+        888888888888888888888888888888888888....888888888888....8888....
+        888888888888888888888888888888888888....888888888888....8888....
+        88888888888888888888888888888888........888888888888888888888888
+        88888888888888888888888888888888........888888888888888888888888
+        88888888888888888888888888888888........888888888888888888888888
+        88888888888888888888888888888888........888888888888888888888888
+        8888888888888888888888888888888888888888....8888888888888888....
+        8888888888888888888888888888888888888888....8888888888888888....
+        8888888888888888888888888888888888888888....8888888888888888....
+        8888888888888888888888888888888888888888....8888888888888888....
+        88888888888888888888888888888888........8888....8888888888888888
+        88888888888888888888888888888888........8888....8888888888888888
+        88888888888888888888888888888888........8888....8888888888888888
+        88888888888888888888888888888888........8888....8888888888888888
+    ***/
     loi_uniforme(&tree, p, n);
+    //loi_gaussienne(&tree, p, n, 4*4*4*4-20, 7);
     avl_to_stack(tree, &pl);
     int i=0;
     while(pl != NULL){
-
-        int premiere_borne = depiler(&pl);
+        int premiere_borne = *((int*) depiler(&pl));
         while(i < premiere_borne){
             enfiler(Nr(), f);
             i++;
@@ -1171,9 +1160,14 @@ image Alea(int k, int n){
     image racine;
     while(!fileVide(f)){
         racine = defiler(f);
-        if(!fileVide(f)) enfiler(Qt(racine, defiler(f), defiler(f), defiler(f)), f);
+        if(!fileVide(f)){
+            image im1 = defiler(f);
+            image im2 = defiler(f);
+            image im3 = defiler(f);
+            enfiler(Qt(racine, im1, im2, im3), f);
+        }
     }
-
+    free_t(tree);
     libererFile(f);
     return racine;
 }
@@ -1396,10 +1390,11 @@ void main() {
         PrintPix(img,6);
         FreeImage(img);
         
-        printf("Alea(3,5) : \n");
+        printf("Alea(4,20) : \n");
         img = Alea(4, 20);
         PrintPix(img,6);
         FreeImage(img);
+
 
         printf("Alea(1,2)  10 fois \n");
         for(int i=0; i<10; i++){
@@ -1408,6 +1403,8 @@ void main() {
             FreeImage(img);
         }
         
+
+
     }
 
 }
