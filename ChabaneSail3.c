@@ -1381,7 +1381,7 @@ void main() {
         srand(time(NULL));
         printf("\n test de la fnction Alea \n\n");
 
-        /*printf("Alea(0,0) : ");
+        printf("Alea(0,0) : ");
         img = Alea(0,0);
         PrintI(img);
         FreeImage(img);
@@ -1395,19 +1395,19 @@ void main() {
         img = Alea(10,1000);
         PrintPix(img,6);
         FreeImage(img);
-        */
+        
         printf("Alea(3,5) : \n");
         img = Alea(4, 20);
         PrintPix(img,6);
         FreeImage(img);
 
-        /*printf("Alea(1,2)  10 fois \n");
+        printf("Alea(1,2)  10 fois \n");
         for(int i=0; i<10; i++){
             img = Alea(1,2);
             PrintI(img);
             FreeImage(img);
         }
-        */
+        
     }
 
 }
