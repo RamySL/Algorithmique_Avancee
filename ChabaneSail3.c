@@ -191,12 +191,8 @@ typedef bloc_image* image ;
 /*            1- Bc(), Nr(), Qt()                */
 /*                                               */
 /*************************************************/
-int nb_malloc = 0;
-
 image Bc() {
     image img =  ((image) malloc (sizeof(struct bloc_image)));
-    //printf("Allocation de la memoire avec l'adresse : %p \n",img);
-    nb_malloc++;
     img -> blanc = true;
     return img;
 }
@@ -207,8 +203,6 @@ image Nr() {
 
 image Qt(image i0,image i1,image i2,image i3){
     image img =  ((image) malloc (sizeof(struct bloc_image)));
-    //printf("Allocation de la memoire avec l'adresse : %p \n",img);
-    nb_malloc++;
     img -> blanc = false;
 
     img->Im[0] = i0;
@@ -469,8 +463,6 @@ void FreeImage(image img){
     while (Pile != NULL){
         image i = depiler(&Pile);
         free(i);
-        //printf("libeartion de la memoire : %p \n",i);
-        nb_malloc--;
     }
 
 }
@@ -682,7 +674,6 @@ void rempliePixels (image img, char** mat, int col_debut,int lig_debut, int cote
     }
 
     if(c != '#'){
-        //printf("rentrer pour remplire la mtrice de lig : %d - %d et col : %d - %d avec : %c \n",lig_debut,lig_fin,col_debut,col_fin,c );
         for (int i = lig_debut; i < lig_fin; i++){
             for (int j = col_debut; j < col_fin; j++){
                 mat[i][j] = c;
