@@ -560,8 +560,6 @@ bool IntersectionVide (image i1, image i2){
 
 /*
 - test si les deux arbre sont égaux sémantiquement (et pas qu'en mémoire)
-- Une manière plus optimisée serait peut etre que c'est un noeud internes regarder si les quatre feilles sont de même
-nature avant de partir récursivement ?
 */
 bool ArbresEgaux (image i1, image i2){
 
@@ -572,10 +570,10 @@ bool ArbresEgaux (image i1, image i2){
     }
 
     if((i1 != NULL && !i1->blanc) &&  (i2 != NULL && !i2->blanc)){
-        return ArbresEgaux(i1->Im[0], i2->Im[0]) &&
+        return (ArbresEgaux(i1->Im[0], i2->Im[0]) &&
                 ArbresEgaux(i1->Im[1], i2->Im[1]) &&
                 ArbresEgaux(i1->Im[2], i2->Im[2]) &&
-                ArbresEgaux(i1->Im[3], i2->Im[3]);
+                ArbresEgaux(i1->Im[3], i2->Im[3]));
     }
 
     return false;
@@ -1313,7 +1311,7 @@ void main() {
     }
 
     // test compteSousArbre
-    if(false){
+    if(true){
         printf("\n test de CompteSousArbre \n\n" );
 
         image img2;
@@ -1362,7 +1360,7 @@ void main() {
 
     }
     //test de Alea
-    if(true){
+    if(false){
         srand(time(NULL));
         printf("\n test de la fnction Alea \n\n");
 
